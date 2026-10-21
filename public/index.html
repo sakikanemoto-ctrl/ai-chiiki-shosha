@@ -1,0 +1,2501 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AI地域商社 — 関西の食材を、人と人でつなぐ地域マーケット</title>
+<meta name="description" content="飲食店の「欲しい」と、農家の「売りたい」を、1つの仕入れ案にまとめる関西の地域マーケット。">
+<meta name="theme-color" content="#fbf7ee">
+<meta name="color-scheme" content="light">
+<!-- design tokens: ivory #fbf7ee / cream #fffdf8 / sage #557a5c / pale orange #fdeadb -->
+
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="地域商社">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap">
+<style>
+/* A little Kansai marché: ivory paper, soft leaf green for actions, pale orange and a touch of yellow for warmth */
+/* OSのダークモード設定には追従せず、いつも明るい配色で表示する */
+:root{
+  color-scheme:light;
+  --bg:#fbf7ee; --card:#fffdf8; --beige:#f5edde; --ink:#3b3a33; --ink-2:#6d685b; --ink-3:#958f7e; --line:#ece3d0;
+  --green:#557a5c; --green-ink:#ffffff; --green-soft:#e6eee3; --green-pale:#f2f6ef;
+  --orange:#b8642c; --orange-soft:#fdeadb; --yellow:#f3d77b; --yellow-soft:#fdf4d3;
+  --f:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Yu Gothic",sans-serif;
+  --shadow:0 2px 6px rgba(120,100,60,.06),0 10px 28px rgba(120,100,60,.08);
+  --shadow-lift:0 4px 10px rgba(120,100,60,.08),0 16px 36px rgba(120,100,60,.12);
+  --nav:70px; --side:236px; --tint-mix:100%; --ease:cubic-bezier(.2,.8,.2,1);
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#1a1814; --card:#24211c; --beige:#2d2922; --ink:#f2ede2; --ink-2:#c3bba9; --ink-3:#958e7e; --line:#3a352c;
+  --green:#8cc79a; --green-ink:#14231a; --green-soft:#24362a; --green-pale:#1f2a22;
+  --orange:#f0a36f; --orange-soft:#3b2a1d; --yellow:#e9c862; --yellow-soft:#3a3320;
+  --shadow:0 2px 8px rgba(0,0,0,.3); --shadow-lift:0 6px 18px rgba(0,0,0,.4); --tint-mix:22%;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);font-weight:500;font-size:15.5px;line-height:1.8;padding-inline:16px;padding-bottom:calc(var(--nav) + 44px + env(safe-area-inset-bottom,0px));font-variant-numeric:tabular-nums}
+.wrap{max-width:740px;margin:0 auto}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.45;font-weight:700}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2.5px solid var(--green);outline-offset:3px}
+
+/* type scale */
+.page-title{font-size:25px;letter-spacing:.02em}
+.lead{font-size:14.5px;color:var(--ink-2);margin-top:6px}
+.sec-title{font-size:19px}
+.cap{font-size:12.5px;color:var(--ink-3);line-height:1.65}
+.muted{color:var(--ink-2)}
+.page-h{padding-top:6px}
+.sec{display:flex;flex-direction:column;gap:14px}
+.sec-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+
+/* top bar (mobile) */
+header.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding-top:env(safe-area-inset-top,0px);margin-inline:-16px;padding-inline:16px}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:54px;max-width:740px;margin:0 auto}
+.logo{font-weight:700;font-size:16.5px;display:flex;align-items:center;gap:8px;letter-spacing:.02em}
+.logo img{width:30px;height:30px;border-radius:10px}
+.back{border:0;background:var(--card);color:var(--green);font-weight:700;font-size:14.5px;padding:7px 14px;border-radius:999px;cursor:pointer;white-space:nowrap;box-shadow:var(--shadow)}
+
+/* nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;background:color-mix(in srgb,var(--card) 94%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);border-radius:22px 22px 0 0}
+nav.tabs .in{max-width:740px;margin:0 auto;display:grid;grid-template-columns:repeat(var(--n,5),1fr);height:var(--nav);padding-inline:6px}
+nav.tabs .side-logo{display:none}
+nav.tabs button{border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:11.5px;font-weight:700;color:var(--ink-3);cursor:pointer;padding:0;transition:color .2s}
+nav.tabs .emo{font-size:21px;line-height:1;width:54px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:999px;filter:grayscale(.55) opacity(.75);transition:all .25s}
+nav.tabs button[aria-current="page"]{color:var(--green)}
+nav.tabs button[aria-current="page"] .emo{background:var(--green-soft);filter:none;transform:translateY(-2px)}
+
+main{display:flex;flex-direction:column;gap:34px;padding-top:6px}
+main.enter{animation:fadeUp .35s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* surfaces */
+.card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow)}
+.soft{background:var(--green-pale);border-radius:24px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.mini{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:14.5px}
+.mini-list{display:flex;flex-direction:column;gap:10px}
+.mini .t{font-weight:700}
+.mini .s{font-size:12.5px;color:var(--ink-3)}
+.mini.clickable{cursor:pointer;text-align:left;width:100%;transition:transform .2s,box-shadow .2s}
+.mini.clickable:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+
+/* buttons: pill shaped, press to shrink */
+.btn{border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:12px 20px;font-weight:700;cursor:pointer;font-size:15px;line-height:1.4;transition:transform .12s,box-shadow .2s,filter .2s,border-color .2s}
+.btn:hover{border-color:var(--ink-3)}
+.btn:active,.tile:active,.chip:active,.mcard:active{transform:scale(.97)}
+.btn-main{background:var(--green);border-color:var(--green);color:var(--green-ink);padding:16px 22px;font-size:16px;width:100%;box-shadow:0 6px 16px color-mix(in srgb,var(--green) 28%,transparent)}
+.btn-main:hover{filter:brightness(1.06);border-color:var(--green)}
+.btn-sub{background:var(--green-soft);border-color:transparent;color:var(--green)}
+.btn-sub:hover{border-color:var(--green)}
+.btn.small{padding:7px 14px;font-size:13.5px}
+.btn:disabled{opacity:.55;cursor:wait}
+.btn.danger{color:var(--orange);border-color:var(--orange-soft);background:var(--orange-soft)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row>.grow{flex:1}
+.link{background:none;border:0;color:var(--green);font-weight:700;cursor:pointer;padding:4px 0;font-size:14.5px;text-align:left}
+.link:hover{text-decoration:underline;text-underline-offset:3px}
+
+/* badges */
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{display:inline-flex;align-items:center;gap:3px;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700;white-space:nowrap;background:var(--beige);color:var(--ink-2)}
+.tag.good{background:var(--green-soft);color:var(--green)}
+.tag.hot{background:var(--orange-soft);color:var(--orange)}
+.tag.sun{background:var(--yellow-soft);color:#8a6a12}
+
+/* messages */
+.msg{border-radius:18px;padding:13px 16px;font-size:14.5px;background:var(--beige)}
+.msg.warn,.msg.err{background:var(--orange-soft)}
+.msg.warn b,.msg.err b{color:var(--orange)}
+.msg.ok{background:var(--green-soft)}
+
+/* home hello */
+.hello{position:relative;border-radius:28px;padding:24px 22px 22px;background:linear-gradient(160deg,var(--green-pale) 0%,var(--yellow-soft) 100%);overflow:hidden;display:flex;flex-direction:column;gap:6px;min-height:200px}
+.hello .txt{position:relative;z-index:1;max-width:calc(100% - 118px)}
+.hello h1{font-size:24px;letter-spacing:.02em}
+.nw{display:inline-block}
+.hello .art{position:absolute;right:-6px;bottom:-4px;width:150px;height:auto;opacity:.95}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;list-style:none;margin:6px 0 0;padding:0;position:relative;z-index:1}
+.flow li{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;font-size:11.5px;font-weight:700;color:var(--ink-2);line-height:1.35;position:relative}
+.flow li .dot{width:40px;height:40px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:var(--shadow)}
+.flow li:not(:last-child)::after{content:"";position:absolute;top:20px;left:calc(50% + 24px);right:calc(-50% + 24px);border-top:2px dotted color-mix(in srgb,var(--green) 40%,transparent)}
+@media (max-width:420px){.hello .txt{max-width:100%}.hello .art{width:112px;top:10px;bottom:auto;right:-10px;opacity:.55}}
+
+/* role select：2枚のカードは同じ幅・高さ。アイコン・見出し・説明・ボタンの行をそろえ、ボタンの位置を合わせる */
+.role-cards{display:grid;grid-template-columns:1fr;grid-auto-rows:1fr;gap:14px}
+.role-card{position:relative;background:var(--card);border:2px solid var(--line);border-radius:24px;padding:22px 20px 20px;display:flex;flex-direction:column;gap:10px;cursor:pointer;box-shadow:var(--shadow);transition:border-color .2s,box-shadow .2s,background .2s}
+.role-card:hover{border-color:color-mix(in srgb,var(--green) 55%,var(--line));box-shadow:var(--shadow-lift)}
+.role-card:focus-within{border-color:var(--green)}
+.role-card.on{border-color:var(--green);background:var(--green-pale);box-shadow:0 0 0 4px var(--green-soft),var(--shadow)}
+.role-card .ic{width:56px;height:56px;border-radius:18px;background:var(--green-soft);display:flex;align-items:center;justify-content:center;font-size:28px}
+.role-card h2{font-size:20px}
+.role-card .desc{color:var(--ink-2);font-size:14.5px;line-height:1.7}
+.role-card .btn-main{min-height:56px;margin-top:auto}
+@media (min-width:640px){
+  .role-cards{grid-template-columns:1fr 1fr;grid-auto-rows:auto}
+  @supports (grid-template-rows:subgrid){.role-card{display:grid;grid-template-rows:subgrid;grid-row:span 4}}
+}
+/* auth */
+.auth{max-width:460px;width:100%;margin:0 auto}
+.auth .role-pill{display:inline-flex;align-items:center;gap:6px;background:var(--green-soft);color:var(--green);font-weight:700;border-radius:999px;padding:4px 12px;font-size:13.5px;align-self:flex-start}
+.auth .switch{text-align:center;font-size:14px;color:var(--ink-2)}
+/* role home */
+.role-chip{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;font-weight:700;color:var(--green);background:color-mix(in srgb,var(--card) 80%,transparent);border-radius:999px;padding:4px 12px;margin-bottom:6px}
+.next-up{background:var(--card);border:2px solid var(--orange);border-radius:24px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;box-shadow:0 0 0 4px var(--orange-soft),var(--shadow)}
+.next-up .k{font-size:12.5px;font-weight:700;color:var(--orange);letter-spacing:.04em}
+.next-up h2{font-size:19px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (min-width:700px){.tiles{grid-template-columns:repeat(3,1fr)}}
+.tile{position:relative;background:var(--card);border:1.5px solid var(--line);border-radius:20px;padding:14px;display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;min-height:104px;cursor:pointer;transition:transform .15s,box-shadow .2s,border-color .2s}
+.tile:hover{border-color:var(--green);box-shadow:var(--shadow)}
+.tile .emo{font-size:22px;line-height:1.3}
+.tile .t{font-weight:700;font-size:14.5px;line-height:1.45}
+.tile .s{font-size:12px;color:var(--ink-3);line-height:1.55}
+.tile .badge{position:absolute;top:10px;right:10px}
+.cnt{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;border-radius:999px;padding:0 6px;background:var(--orange);color:#fff;font-size:11.5px;font-weight:700;line-height:1}
+nav.tabs button{position:relative}
+nav.tabs .cnt{position:absolute;top:4px;left:calc(50% + 8px)}
+/* deals */
+.st{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:3px 11px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.st.todo{background:var(--orange);color:#fff}
+.st.wait{background:var(--yellow-soft);color:#7a5c0e}
+.st.ok{background:var(--green);color:var(--green-ink)}
+.st.done{background:var(--green-soft);color:var(--green)}
+.st.end{background:var(--beige);color:var(--ink-2)}
+.deal{gap:12px}
+.deal.todo{border:2px solid var(--orange);box-shadow:0 0 0 3px var(--orange-soft),var(--shadow)}
+.deal .top{display:flex;gap:12px;align-items:flex-start}
+.deal .face{width:48px;height:48px;flex:none;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;background:color-mix(in srgb,var(--t) var(--tint-mix),var(--card))}
+.deal h3{font-size:17px;line-height:1.4}
+.deal .who{font-size:13.5px;color:var(--ink-2)}
+.next{border-radius:16px;padding:10px 14px;background:var(--beige);display:flex;flex-direction:column;gap:2px;font-size:14px}
+.next b{font-size:15px}
+.next.me{background:var(--orange-soft)}
+.next.me b{color:var(--orange)}
+.next.ok{background:var(--green-soft)}
+.next.ok b{color:var(--green)}
+.prog{display:grid;grid-template-columns:repeat(6,1fr);list-style:none;margin:0;padding:0;gap:2px}
+.prog li{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:700;color:var(--ink-3);text-align:center;line-height:1.3;position:relative}
+.prog li i{width:14px;height:14px;border-radius:50%;background:var(--line);display:block;position:relative;z-index:1}
+.prog li:not(:last-child)::after{content:"";position:absolute;top:6px;left:50%;right:-50%;height:2px;background:var(--line)}
+.prog li.done i,.prog li.done::after{background:var(--green)}
+.prog li.now i{background:var(--orange);box-shadow:0 0 0 4px var(--orange-soft)}
+.prog li.now,.prog li.done{color:var(--ink-2)}
+.prog.stop li.now i{background:var(--ink-3);box-shadow:none}
+.deal-terms{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0;font-size:14px}
+.deal-terms dt{color:var(--ink-3);font-size:12.5px;padding-top:2px}
+.deal-terms dd{margin:0;font-weight:700;overflow-wrap:anywhere}
+.deal-terms .chg{color:var(--orange)}
+.terms-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;font-weight:700;color:var(--ink-2)}
+.deal-note{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:8px 12px;font-size:13.5px;white-space:pre-wrap;overflow-wrap:anywhere}
+.deal .acts{display:flex;flex-wrap:wrap;gap:8px}
+.deal .acts .btn{flex:1 1 auto;min-height:46px}
+.hist{font-size:13px}
+.hist ol{margin:6px 0 0;padding-left:18px;color:var(--ink-2)}
+.deal-filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;margin-inline:-16px;padding-inline:16px}
+.deal-filters .chip{flex:none}
+/* ---------- 食材をさがす：スワイプデッキ（10/16版から移植） ---------- */
+.produce{position:relative;display:flex;align-items:center;justify-content:center;background:radial-gradient(120% 90% at 30% 20%,#fff 0%,color-mix(in srgb,var(--t) 70%,#fff) 42%,color-mix(in srgb,var(--t) 100%,#f0e6d6) 100%);overflow:hidden}
+.produce::after{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.55) 1.2px,transparent 1.3px);background-size:18px 18px;mask-image:linear-gradient(180deg,#000,transparent 70%);-webkit-mask-image:linear-gradient(180deg,#000,transparent 70%);pointer-events:none}
+.produce>span[aria-hidden]{filter:drop-shadow(0 14px 18px rgba(80,50,20,.22));line-height:1}
+.deck-wrap{display:flex;flex-direction:column;align-items:center;gap:16px}
+.deck{position:relative;width:100%;max-width:390px;height:clamp(470px,62vh,560px);touch-action:pan-y}
+.swipe-card{position:absolute;inset:0;width:100%;height:100%;display:flex;flex-direction:column;background:var(--card);border-radius:30px;overflow:hidden;cursor:grab;user-select:none;-webkit-user-select:none;text-align:left;border:1px solid var(--line);box-shadow:var(--shadow-lift);transition:transform .34s var(--ease),opacity .3s ease}
+.swipe-card:not(.behind){animation:cardIn .42s var(--ease) both}
+@keyframes cardIn{from{transform:scale(.94) translateY(16px);opacity:.85}to{transform:none;opacity:1}}
+.swipe-card:active{cursor:grabbing}
+.swipe-card.behind{transform:scale(.94) translateY(16px);box-shadow:var(--shadow);opacity:.85;pointer-events:none}
+.swipe-card.behind .peek{display:none}
+.swipe-card.lift{box-shadow:0 30px 60px -24px rgba(29,77,58,.5);cursor:grabbing}
+.swipe-card .img{flex:1;min-height:0;font-size:140px}
+.swipe-card .img .tags{position:absolute;left:16px;top:16px;right:16px;z-index:1}
+.swipe-card .img .tag{background:rgba(255,253,248,.92);backdrop-filter:blur(4px);font-size:12.5px;padding:4px 12px}
+.swipe-card .img .tag.hot{color:var(--orange)}
+.swipe-card .peek{position:absolute;right:14px;bottom:14px;z-index:1;font-size:12px;font-weight:700;color:var(--ink-2);background:rgba(255,253,248,.92);border-radius:999px;padding:5px 12px;backdrop-filter:blur(4px)}
+.swipe-card .body{padding:18px 20px 52px;display:flex;flex-direction:column;gap:14px;flex:none}
+.swipe-card h3{font-family:var(--f);font-weight:800;font-size:32px;line-height:1.15;letter-spacing:.04em;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.swipe-card h3 small{font-family:var(--f);font-size:14px;font-weight:700;color:var(--ink-3);letter-spacing:.02em}
+.grower{display:flex;align-items:center;gap:10px;margin-top:-4px}
+.grower .av{flex:none;width:38px;height:38px;border-radius:50%;background:var(--green);color:#fffdf8;display:flex;align-items:center;justify-content:center;font-family:var(--f);font-weight:800;font-size:16px}
+.grower b{display:block;font-size:14.5px;line-height:1.3}
+.grower small{display:block;font-size:12px;color:var(--ink-3);font-weight:700}
+.swipe-card .spec{display:grid;grid-template-columns:1.1fr 1fr 1.2fr;gap:0;margin:0;background:var(--bg);border-radius:16px;overflow:hidden}
+.swipe-card .spec div{padding:10px 12px;min-width:0;position:relative}
+.swipe-card .spec div+div::before{content:"";position:absolute;left:0;top:12px;bottom:12px;border-left:1px solid var(--line)}
+.swipe-card .spec dt{font-size:11px;color:var(--ink-3);font-weight:700;letter-spacing:.04em}
+.swipe-card .spec dd{margin:0;font-size:15px;font-weight:700;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.swipe-card .spec dd .num{font-size:19px}
+.swipe-card .spec dd small{font-size:11.5px;color:var(--ink-3);font-weight:700;margin-left:1px}
+.swipe-card .spec dd.hot{color:var(--orange)}
+.swipe-card .dist{font-size:12.5px;color:var(--ink-2);margin-top:-6px;text-align:center}
+.swipe-stamp{position:absolute;top:24px;padding:6px 16px;border-radius:12px;border:3px solid;font-weight:800;font-size:22px;letter-spacing:.12em;opacity:0;pointer-events:none;transition:opacity .1s;background:rgba(255,253,248,.88);z-index:2;font-family:var(--f)}
+.swipe-stamp.like{left:20px;color:var(--green);border-color:var(--green);transform:rotate(-12deg)}
+.swipe-stamp.skip{right:20px;color:var(--ink-2);border-color:var(--ink-2);transform:rotate(12deg)}
+.swipe-actions{display:flex;gap:34px;align-items:flex-end;justify-content:center;position:relative;z-index:3;margin-top:-58px}
+.swipe-actions button{width:64px;height:64px;border-radius:50%;border:1px solid var(--line);background:var(--card);cursor:pointer;box-shadow:var(--shadow);transition:transform .18s var(--ease),box-shadow .2s;display:flex;align-items:center;justify-content:center;color:var(--ink-2)}
+.swipe-actions button svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
+.swipe-actions button:hover{box-shadow:var(--shadow-lift);transform:translateY(-2px)}
+.swipe-actions button:active{transform:scale(.88)}
+.swipe-actions .like-btn{width:80px;height:80px;background:var(--green);border-color:var(--green);color:#fffdf8;box-shadow:0 16px 30px -14px color-mix(in srgb,var(--green) 85%,transparent)}
+.swipe-actions .like-btn svg{width:34px;height:34px;fill:currentColor;stroke:none}
+.swipe-actions .lbl{display:block;font-size:11.5px;font-weight:700;color:var(--ink-3);text-align:center;margin-top:6px;letter-spacing:.06em}
+.swipe-actions .act-wrap{display:flex;flex-direction:column;align-items:center}
+.deck-count{display:flex;align-items:center;gap:10px;width:100%;max-width:390px;font-family:var(--f);font-size:12.5px;font-weight:600;color:var(--ink-3);letter-spacing:.08em}
+.deck-count .deck-bar{flex:1;height:4px;border-radius:999px;background:var(--beige);overflow:hidden}
+.deck-count .deck-bar i{display:block;height:100%;background:var(--green);border-radius:999px;transition:width .4s var(--ease)}
+.deck-empty{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:44px 20px;width:100%;max-width:390px;background:var(--card);border:1px dashed var(--line);border-radius:24px}
+.deck-empty .big{font-size:42px;line-height:1}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:12px}
+.mcell{display:flex;flex-direction:column;gap:8px}
+.mcell .btn{min-height:44px}
+
+/* pick-of-the-day card */
+.pick{position:relative;background:var(--card);border-radius:28px;padding:22px;box-shadow:var(--shadow);border:1px solid var(--line);display:flex;flex-direction:column;gap:14px;overflow:hidden}
+.pick-head{display:flex;gap:16px;align-items:center}
+.pick .art-bubble{width:92px;height:92px;flex:none;border-radius:30px;display:flex;align-items:center;justify-content:center;font-size:52px;background:color-mix(in srgb,var(--t) var(--tint-mix),var(--card))}
+.pick h3{font-size:24px}
+.pick h3 small{font-size:13.5px;font-weight:500;color:var(--ink-2);margin-left:6px}
+.where{font-size:13.5px;color:var(--ink-2);display:flex;flex-wrap:wrap;gap:2px 12px}
+.quote-b{position:relative;background:var(--yellow-soft);border-radius:18px;padding:12px 16px;font-size:15px}
+.quote-b::before{content:"";position:absolute;top:-7px;left:34px;width:14px;height:14px;background:var(--yellow-soft);transform:rotate(45deg);border-radius:3px}
+.pick-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.price{white-space:nowrap}
+.price b{font-size:24px}
+.price span{font-size:13px;color:var(--ink-3)}
+
+/* marché cards */
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mcard{background:var(--card);border:1px solid var(--line);border-radius:22px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;transition:transform .2s,box-shadow .2s;text-align:left}
+.mcard:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
+.mcard .img{position:relative;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:54px;background:color-mix(in srgb,var(--t) var(--tint-mix),var(--card))}
+.mcard .img .tags{position:absolute;left:8px;top:8px;right:8px}
+.mcard .img .tag{background:color-mix(in srgb,var(--card) 92%,transparent)}
+.mcard .img .tag.good{color:var(--green)}
+.mcard .img .tag.hot{color:var(--orange)}
+.mcard .body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.mcard h3{font-size:17px;line-height:1.35}
+.mcard h3 small{font-size:12px;font-weight:500;color:var(--ink-3);margin-left:4px}
+.mcard .where{font-size:12.5px;flex-direction:column;gap:0}
+.mcard .pr{display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-top:auto;flex-wrap:wrap}
+.mcard .pr b{font-size:18px}
+.mcard .pr .left{font-size:12.5px;color:var(--ink-2);font-weight:700}
+.mcard .pr .left.hot{color:var(--orange)}
+.mcard .go{margin-top:6px;width:100%;padding:8px 10px;font-size:13px}
+.hscroll{display:grid;grid-auto-flow:column;grid-auto-columns:46%;gap:12px;overflow-x:auto;padding:4px 16px 10px;margin-inline:-16px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.hscroll::-webkit-scrollbar{display:none}
+.hscroll>*{scroll-snap-align:start}
+
+/* search */
+.search{display:flex;flex-direction:column;gap:12px}
+.search-box{display:flex;align-items:flex-start;gap:10px;background:var(--card);border:2px solid var(--line);border-radius:30px;padding:14px 18px;box-shadow:var(--shadow);transition:border-color .2s}
+.search-box:focus-within{border-color:var(--green)}
+.search-box .emo{font-size:20px;line-height:1.6}
+.search-box textarea{flex:1;border:0;background:transparent;resize:none;font-size:16.5px;line-height:1.6;min-height:54px;outline:none;padding:0}
+.chip-row{display:flex;gap:8px;overflow-x:auto;padding:2px 16px 6px;scrollbar-width:none;margin-inline:-16px}
+.chip-row::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:7px 15px;font-size:14px;cursor:pointer;white-space:nowrap;color:var(--ink-2);font-weight:700;transition:transform .12s,background .2s,border-color .2s}
+.chip:hover{border-color:var(--green)}
+.chip[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:var(--green-ink)}
+.chip.ex{background:var(--beige);border-color:transparent;font-size:13px;font-weight:500}
+.chip.ex:hover{border-color:var(--ink-3)}
+.ask-cta{display:flex;align-items:center;gap:14px;border:0;background:var(--yellow-soft);border-radius:24px;padding:14px 18px;cursor:pointer;text-align:left;width:100%;transition:transform .15s}
+.ask-cta:hover{transform:translateY(-2px)}
+.ask-cta img{width:44px;height:44px;border-radius:14px;flex:none}
+.ask-cta b{display:block;font-size:15.5px}
+.ask-cta span{font-size:13px;color:var(--ink-2)}
+
+/* AI chat */
+.chat{display:flex;flex-direction:column;gap:14px}
+.brow{display:flex;gap:10px;align-items:flex-end}
+.brow.me{justify-content:flex-end}
+.avatar{width:42px;height:42px;border-radius:14px;flex:none;box-shadow:var(--shadow)}
+.bubble{background:var(--card);border:1px solid var(--line);border-radius:22px 22px 22px 6px;padding:14px 16px;max-width:86%;box-shadow:var(--shadow);animation:pop .35s ease both}
+.bubble.me{background:var(--green);border-color:var(--green);color:var(--green-ink);border-radius:22px 22px 6px 22px;box-shadow:none}
+.bubble .name{font-size:12px;font-weight:700;color:var(--green);margin-bottom:2px}
+@keyframes pop{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}
+.typing{display:inline-flex;gap:5px;padding:4px 2px}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--ink-3);animation:blink 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.composer{display:flex;gap:8px;align-items:flex-end;background:var(--card);border:2px solid var(--line);border-radius:28px;padding:8px 8px 8px 18px;box-shadow:var(--shadow)}
+.composer:focus-within{border-color:var(--green)}
+.composer textarea{flex:1;border:0;background:transparent;resize:none;outline:none;font-size:16px;line-height:1.6;padding:8px 0;min-height:44px}
+.composer .btn{flex:none;padding:10px 18px}
+.why{background:var(--yellow-soft);border-radius:16px;padding:10px 14px}
+.why .t{font-size:12.5px;font-weight:700;color:#8a6a12}
+.why ul{margin:2px 0 0;padding-left:1.1em;font-size:14px}
+
+/* detail sheet */
+.sheet-bg{position:fixed;inset:0;z-index:30;background:rgba(60,50,30,.32);display:flex;align-items:flex-end;justify-content:center;animation:fade .2s ease both}
+.sheet{background:var(--bg);width:100%;max-width:560px;max-height:88vh;overflow:auto;border-radius:28px 28px 0 0;padding:0 0 calc(20px + env(safe-area-inset-bottom,0px));animation:up .3s cubic-bezier(.2,.8,.2,1) both}
+.sheet .img{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:84px;background:color-mix(in srgb,var(--t) var(--tint-mix),var(--card));position:relative}
+.sheet .x{position:absolute;right:14px;top:14px;width:38px;height:38px;border-radius:50%;border:0;background:var(--card);font-size:18px;cursor:pointer;box-shadow:var(--shadow)}
+.sheet .in{padding:20px 22px;display:flex;flex-direction:column;gap:14px}
+.sheet h2{font-size:24px}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+@media (min-width:700px){.sheet-bg{align-items:center}.sheet{border-radius:28px;max-height:84vh}}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0}
+.facts div{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;min-width:0}
+.facts dt{font-size:12px;color:var(--ink-3)}
+.facts dd{margin:0;font-weight:700;font-size:15px;overflow-wrap:anywhere}
+
+/* forms */
+.steps{display:flex;justify-content:space-between;list-style:none;margin:0;padding:0;position:relative}
+.steps::before{content:"";position:absolute;left:16px;right:16px;top:15px;border-top:2px dotted var(--line)}
+.steps li{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:var(--ink-3);position:relative;font-weight:700;flex:1}
+.steps li .n{width:32px;height:32px;border-radius:50%;background:var(--card);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13px}
+.steps li.on{color:var(--ink)}
+.steps li.on .n{background:var(--green);border-color:var(--green);color:var(--green-ink);transform:scale(1.08)}
+.steps li.done .n{background:var(--green-soft);border-color:var(--green-soft);color:var(--green)}
+.progress{display:flex;justify-content:space-between;align-items:center;font-size:13.5px;color:var(--ink-2);background:var(--beige);border-radius:999px;padding:8px 16px}
+.progress b{color:var(--orange)}
+.progress.done{background:var(--green-soft)}
+.progress.done b{color:var(--green)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid .full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label,.sec-label{font-size:13.5px;color:var(--ink-2);font-weight:700}
+.field input,.field select{width:100%;border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;background:var(--bg);min-width:0;font-size:16px}
+.field input:focus,.field select:focus{border-color:var(--green);outline:none}
+.field.miss input,.field.miss select{border-color:var(--orange);background:var(--orange-soft)}
+.pair{display:flex;gap:8px}
+.pair>*{flex:1;min-width:0}
+.big-input{font-size:24px!important;font-weight:700;padding:14px 16px!important}
+.quote{font-size:14px;background:var(--beige);border-radius:16px;padding:10px 14px;color:var(--ink-2)}
+.err-list{margin:0;padding-left:18px;font-size:13.5px;color:var(--orange)}
+.check{display:flex;gap:10px;align-items:center;font-size:15px}
+.check input{width:22px;height:22px;accent-color:var(--green)}
+@media (max-width:440px){.grid{grid-template-columns:1fr}}
+.celebrate{text-align:center;align-items:center;background:linear-gradient(160deg,var(--green-pale),var(--yellow-soft));border:0}
+.celebrate .big{font-size:46px;line-height:1}
+.celebrate h2{font-size:22px}
+.confetti{position:fixed;top:-12px;width:9px;height:14px;border-radius:3px;z-index:40;pointer-events:none;animation:fall 1.6s cubic-bezier(.3,.6,.6,1) forwards}
+@keyframes fall{to{transform:translate(var(--dx),105vh) rotate(var(--r));opacity:.2}}
+
+/* plan slip */
+.slip{background:var(--card);border:1px solid var(--line);border-radius:28px;overflow:hidden;box-shadow:var(--shadow)}
+.slip-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:22px}
+.slip-head.ok{background:linear-gradient(160deg,var(--green-soft),var(--green-pale))}
+.slip-head.bad{background:var(--orange-soft)}
+.slip-no{font-size:12.5px;color:var(--ink-3)}
+.verdict{font-weight:700;font-size:19px;margin-top:4px;line-height:1.5;text-wrap:balance}
+.slip-head.ok .verdict{color:var(--green)}
+.slip-head.bad .verdict{color:var(--orange)}
+.stamp{flex:none;width:72px;height:72px;border:2px dashed var(--orange);border-radius:50%;color:var(--orange);display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(-8deg);line-height:1.2;text-align:center;background:var(--card)}
+.stamp b{font-size:15px;letter-spacing:.06em}
+.stamp small{font-size:9.5px;font-weight:700}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);margin:0;border-bottom:1px dashed var(--line)}
+.sum>div{padding:16px 20px;border-right:1px dashed var(--line);min-width:0}
+.sum>div:last-child{border-right:0}
+.sum dt{font-size:12.5px;color:var(--ink-3);font-weight:700}
+.sum dd{margin:2px 0 0;font-size:15px;line-height:1.5}
+.sum .bigv{font-weight:700;font-size:24px;line-height:1.25}
+.sum .bigv small{font-size:13px;margin-left:2px}
+.sum .sub{display:block;font-size:12.5px;color:var(--ink-3)}
+@media (max-width:520px){.sum{grid-template-columns:1fr}.sum>div{border-right:0;border-bottom:1px dashed var(--line);display:grid;grid-template-columns:4.6em 1fr;gap:10px;align-items:baseline}.sum>div:last-child{border-bottom:0}}
+.slip-sec{padding:16px 22px 4px;font-size:13px;font-weight:700;color:var(--ink-3)}
+.fc{display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;padding:12px 22px;align-items:center}
+.fc .face{grid-row:1/span 2;width:42px;height:42px;border-radius:14px;background:var(--beige);display:flex;align-items:center;justify-content:center;font-size:20px}
+.fc .who{font-weight:700;font-size:15.5px}
+.fc .who span{font-weight:500;font-size:12.5px;color:var(--ink-3);margin-left:4px}
+.fc .meta{font-size:12.5px;color:var(--ink-2);grid-column:2;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.fc .amt{grid-row:1/span 2;grid-column:3;text-align:right}
+.fc .amt b{font-size:21px}
+.fc .amt small{font-size:12.5px;margin-left:2px}
+.fc .amt .yen{font-size:12.5px;color:var(--ink-2)}
+.total{display:flex;justify-content:space-between;align-items:baseline;padding:16px 22px;background:var(--beige);font-size:16px;font-weight:700;margin-top:8px}
+.foot{padding:14px 22px;font-size:12.5px;color:var(--ink-3);display:flex;flex-direction:column;gap:2px;line-height:1.65}
+.slip.void{opacity:.7;box-shadow:none;border-radius:18px}
+.slip.void .void-body{text-decoration:line-through;text-decoration-color:var(--orange)}
+.cond{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:14px;color:var(--ink-2)}
+.cond b{color:var(--ink);font-weight:500}
+details summary{cursor:pointer;font-size:15px;font-weight:700}
+.ex{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.ex li{display:flex;flex-direction:column}
+.ex li span{color:var(--ink-3);font-size:13px}
+.sugg{display:flex;flex-direction:column;gap:10px}
+.sugg .s{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--beige);border-radius:18px;padding:12px 16px;flex-wrap:wrap}
+.sugg .s div{font-size:15px;font-weight:700;flex:1 1 200px}
+.sugg .s div span{display:block;font-size:13px;color:var(--ink-2);font-weight:500}
+
+/* producer listing cards */
+.group-h{font-size:15px;font-weight:700;color:var(--ink-2);display:flex;align-items:center;gap:8px}
+.lst{display:flex;flex-direction:column;gap:12px}
+.lc.off{opacity:.6}
+.lc.flash{border-color:var(--green);box-shadow:0 0 0 4px var(--green-soft)}
+.lc-top{display:flex;gap:14px;align-items:center}
+.lc-top .face{width:56px;height:56px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:30px;background:color-mix(in srgb,var(--t) var(--tint-mix),var(--card));flex:none}
+.lc-top .grow{flex:1;min-width:0}
+.kv{display:grid;grid-template-columns:5.5em 1fr;gap:4px 12px;font-size:14.5px;margin:0}
+.kv dt{color:var(--ink-3)}
+.kv dd{margin:0}
+.qty{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px dashed var(--line);padding-top:14px}
+.qty input{width:86px;text-align:right;border:1.5px solid var(--line);border-radius:14px;padding:8px 12px;background:var(--bg);font-size:17px}
+.qty .step{width:42px;height:42px;border:1.5px solid var(--line);border-radius:50%;background:var(--card);font-size:20px;cursor:pointer;line-height:1;transition:transform .12s}
+.qty .step:active{transform:scale(.9)}
+.lines{list-style:none;margin:0;padding:0;font-size:14.5px;display:flex;flex-direction:column;gap:2px}
+.lines li{display:flex;justify-content:space-between;gap:12px}
+
+.toast{position:fixed;left:50%;bottom:calc(var(--nav) + 16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--card);padding:12px 18px;border-radius:999px;font-size:14px;max-width:min(560px,calc(100% - 32px));width:max-content;display:flex;gap:12px;align-items:center;z-index:20;animation:pop .3s ease both}
+.toast button{background:none;border:0;color:var(--card);text-decoration:underline;font-weight:700;cursor:pointer;white-space:nowrap}
+.toast.ok{background:var(--green);color:var(--green-ink)}
+.toast.ok button{color:var(--green-ink)}
+.toast.err{background:var(--orange);color:#fff}
+.toast.err button{color:#fff}
+/* loading skeleton */
+.skel{display:flex;flex-direction:column;gap:16px}
+.skel i{display:block;border-radius:24px;background:linear-gradient(90deg,var(--beige) 25%,var(--card) 50%,var(--beige) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite}
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+/* touch targets */
+.btn,.chip,.act,.link{min-height:44px}
+.btn.small{min-height:38px}
+.link{display:inline-flex;align-items:center}
+/* compare tray */
+.cmp-tray{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav) + 12px + env(safe-area-inset-bottom,0px));z-index:15;display:flex;gap:10px;align-items:center;background:var(--card);border:1.5px solid var(--green);border-radius:999px;padding:6px 6px 6px 18px;box-shadow:var(--shadow-lift);font-weight:700;font-size:14px;max-width:calc(100% - 32px);animation:pop .3s ease both}
+@media (min-width:960px){.cmp-tray{bottom:28px;left:calc(50% + var(--side)/2)}}
+.mcard .acts{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.mcard .acts .btn-sub{flex:1 1 100%!important;white-space:nowrap}
+.mcard .acts .btn{flex:1;padding:8px 6px;font-size:13px;min-height:40px}
+.cmp-btn{flex:0 0 auto!important;width:40px;padding:0!important;font-size:16px!important}
+.cmp-btn[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:var(--green-ink)}
+.mcard .hand{font-size:12px;color:var(--ink-2)}
+.ctable{width:100%;border-collapse:separate;border-spacing:0;font-size:14px}
+.ctable th,.ctable td{padding:10px 8px;border-bottom:1px dashed var(--line);text-align:left;vertical-align:top}
+.ctable th{color:var(--ink-3);font-size:12.5px;font-weight:700;white-space:nowrap;position:sticky;left:0;background:var(--bg)}
+.ctable td.best{color:var(--green);font-weight:700}
+.ctable td .btn{white-space:nowrap;padding:6px 10px;font-size:12.5px;min-height:36px}
+.cwrap{overflow-x:auto;margin-inline:-22px;padding-inline:22px}
+/* filters */
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.filters select{width:100%;border:1.5px solid var(--line);border-radius:999px;padding:10px 14px;background:var(--card);font-size:14px;font-weight:700;color:var(--ink-2);min-height:44px}
+.filters select.on{border-color:var(--green);color:var(--green);background:var(--green-soft)}
+@media (min-width:700px){.filters{grid-template-columns:repeat(3,1fr)}}
+/* farm profile + matches */
+.scene{aspect-ratio:16/8;background:linear-gradient(180deg,#fdf4d3,#f1f7ee);position:relative;overflow:hidden}
+.scene svg{position:absolute;inset:0;width:100%;height:100%}
+.fcard{background:var(--card);border:1px solid var(--line);border-radius:22px;overflow:hidden;cursor:pointer;text-align:left;padding:0;display:flex;flex-direction:column;transition:transform .2s,box-shadow .2s}
+.fcard:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
+.fcard .scene{aspect-ratio:16/9}
+.fcard .body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px}
+.fcard b{font-size:16px}
+.fcard .s{font-size:12.5px;color:var(--ink-2);line-height:1.6}
+.need{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.need .top{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.need ul{margin:0;padding-left:1.2em;font-size:14px}
+.need ul li::marker{content:"✓ ";color:var(--green)}
+.match-btn{background:var(--yellow-soft);border:0;border-radius:999px;padding:8px 14px;font-weight:700;font-size:13.5px;cursor:pointer;color:#7a5c0e;min-height:40px}
+.field textarea{width:100%;border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;background:var(--bg);font-size:16px;resize:vertical;min-height:84px;line-height:1.6}
+.field textarea:focus{border-color:var(--green);outline:none}
+.hint-err{font-size:13px;color:var(--orange)}
+/* role switch */
+.roles{display:inline-grid;grid-template-columns:1fr 1fr;background:color-mix(in srgb,var(--card) 80%,transparent);border-radius:999px;padding:4px;gap:2px;position:relative;z-index:1;margin-bottom:10px;align-self:flex-start}
+.roles button{border:0;background:none;border-radius:999px;padding:7px 14px;font-weight:700;font-size:13.5px;color:var(--ink-2);cursor:pointer;min-height:38px;white-space:nowrap}
+.roles button[aria-pressed="true"]{background:var(--green);color:var(--green-ink);box-shadow:var(--shadow)}
+/* segmented */
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--beige);border-radius:999px;padding:4px}
+.seg button{border:0;background:none;border-radius:999px;padding:9px 10px;font-weight:700;cursor:pointer;color:var(--ink-2);min-height:42px}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--green);box-shadow:var(--shadow)}
+/* ai status */
+.ai-off{display:flex;gap:10px;align-items:flex-start;background:var(--beige);border:1.5px dashed var(--ink-3);border-radius:18px;padding:12px 14px;font-size:13.5px;line-height:1.7}
+.ai-off b{color:var(--ink)}
+.ai-on{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--green);background:var(--green-soft);border-radius:999px;padding:3px 10px}
+.ai-on::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green)}
+/* inquiries */
+.inq{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.inq.new{border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-soft)}
+.inq .top{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.inq .msgtxt{background:var(--beige);border-radius:14px;padding:8px 12px;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.done-ic{width:72px;height:72px;border-radius:50%;background:var(--green-soft);display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto}
+.explain{background:var(--green-pale);border-radius:14px;padding:10px 12px;font-size:14px}
+.facts-box{border:1.5px solid var(--line);border-radius:18px;padding:10px 12px;background:var(--bg)}
+.facts-box .t,.ideas .t,.understood .t{font-size:12.5px;font-weight:700;color:var(--ink-2);margin-bottom:6px}
+.facts-box .facts div{background:var(--card)}
+.ideas{border-radius:16px;padding:10px 14px;background:var(--card);border:1px dashed var(--line)}
+.understood{background:var(--green-pale);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.fav-btn{flex:0 0 auto!important;width:44px;padding:0!important;font-size:18px!important;color:var(--orange)}
+.fav-btn[aria-pressed="true"]{background:var(--orange-soft);border-color:var(--orange-soft)}
+.inq-steps{display:inline-flex;gap:4px;align-items:center;font-size:12.5px;font-weight:700;color:var(--ink-3);flex-wrap:wrap}
+.inq-steps .on{background:var(--orange-soft);color:var(--orange);border-radius:999px;padding:2px 10px}
+.inq-steps .done{color:var(--green)}
+.inq-steps .sep{color:var(--line)}
+.actions.four{grid-template-columns:1fr}
+@media (min-width:700px){.actions.four{grid-template-columns:repeat(2,1fr)}}
+.preview-wrap{max-width:240px;pointer-events:none}
+.why-line{font-size:12.5px;color:#7a5c0e;background:var(--yellow-soft);border-radius:10px;padding:5px 8px;line-height:1.5}
+.quick-row{display:grid;grid-template-columns:1fr;gap:8px;padding:12px 0;border-bottom:1px dashed var(--line)}
+.quick-row:last-child{border-bottom:0}
+.quick-row .ctrls{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.quick-row input{border:1.5px solid var(--line);border-radius:12px;padding:7px 10px;background:var(--bg);font-size:15px}
+.quick-row input[type=number]{width:80px;text-align:right}
+/* 判定の行（一致・一部・不一致・未確認） */
+.st-rows{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.st-rows li{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;line-height:1.5;color:var(--ink-2)}
+.st-rows li::marker,.need .st-rows li::marker,.need .next-list li::marker{content:none}
+.need .st-rows{padding:0;margin:0}
+.st-rows .req{display:inline-block;margin-left:6px;padding:0 7px;border-radius:999px;font-size:11px;font-weight:700;background:var(--beige);color:var(--ink-2);vertical-align:1px}
+.st-rows .req.must{background:var(--orange-soft);color:var(--orange)}
+.st-rows li .tag{flex:none;min-width:64px;justify-content:center}
+.st-rows li b{color:var(--ink)}
+.st-rows li.st-ng b{color:var(--orange)}
+.sa-form .grid,.opp-sim .grid{grid-template-columns:1fr 1fr;gap:12px}
+#sa-sim .mini .btn,.next-list .btn{white-space:nowrap;flex:none}
+.sa-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0}
+.sa-sum div{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:10px 8px;text-align:center;display:flex;flex-direction:column;gap:2px}
+.sa-sum b{font-size:24px;font-variant-numeric:tabular-nums;color:var(--green)}
+.sa-sum span{font-size:11.5px;color:var(--ink-2);font-weight:700;line-height:1.35}
+.sa-card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow);margin-bottom:12px}
+.sa-card.dim,.need.dim{border-style:dashed;background:var(--bg)}
+.sa-head{display:flex;gap:12px;align-items:center}
+.sa-head .face{width:48px;height:48px;border-radius:14px;background:var(--t);display:flex;align-items:center;justify-content:center;font-size:26px;overflow:hidden;flex:none}
+.sa-head .face img{width:100%;height:100%;object-fit:cover}
+.sa-head b small{font-weight:500;font-size:13px;color:var(--ink-2)}
+.sa-head .price{text-align:right;flex:none}
+.sa-head .price b{font-size:19px;font-variant-numeric:tabular-nums}
+.sa-head .price span{display:block;font-size:11.5px;color:var(--ink-2)}
+.sa-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--beige);border-radius:16px;padding:8px}
+.sa-nums div{display:flex;flex-direction:column;gap:2px;text-align:center}
+.sa-nums span{font-size:11px;color:var(--ink-2);font-weight:700}
+.sa-nums b{font-size:15px;font-variant-numeric:tabular-nums}
+.next-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.next-list li{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--green-pale);border-radius:16px;padding:10px 14px;font-size:14px}
+.next-list li::marker{content:none}
+.next-list li span{flex:1 1 200px}
+.fixes{margin:0;padding-left:1.2em;font-size:13.5px}
+.need .fixes li::marker{content:"→ ";color:var(--ink-3)}
+.opp-sim summary{font-weight:700;cursor:pointer}
+.sd-table td{font-size:12.5px;vertical-align:top;min-width:96px}
+.sd-table .sd{white-space:nowrap}
+.sd-table .sd.s{color:var(--green);font-weight:700}
+.sd-table .sd.d{color:var(--orange);font-weight:700}
+.sd-table .sd.p{color:var(--ink-2)}
+.stage-help summary{cursor:pointer;font-weight:700}
+.qty-note{display:block;margin-top:2px}
+.mini .btn.small{white-space:nowrap;flex:none}
+.tag.rank{background:var(--green);color:var(--green-ink)}
+.pairline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:15px}
+.pairline .arrow{color:var(--green);font-weight:700;font-size:18px}
+.coord-cta{display:flex;align-items:center;gap:14px;border:1.5px solid var(--green);background:linear-gradient(160deg,var(--green-pale),var(--card));border-radius:24px;padding:16px 18px;cursor:pointer;text-align:left;width:100%;box-shadow:var(--shadow)}
+.coord-cta b{display:block;font-size:16.5px}
+.coord-cta span.s{font-size:13px;color:var(--ink-2)}
+.coord-cta .em{font-size:32px;width:46px;text-align:center}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (min-width:600px){.kpis{grid-template-columns:repeat(4,1fr)}}
+.kpis div{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column}
+.kpis b{font-size:24px;line-height:1.2}
+.kpis span{font-size:12px;color:var(--ink-2)}
+.chart{display:flex;flex-direction:column;gap:6px}
+.bar-row{display:grid;grid-template-columns:8.5em 1fr auto;gap:8px;align-items:center;font-size:13.5px}
+.bar-k{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;min-height:auto!important}
+.bar-v{display:flex;flex-direction:column;gap:2px}
+.hbar{height:9px;border-radius:999px;min-width:2px}
+.hbar.a{background:var(--green)}
+.hbar.b{background:var(--orange)}
+.bar-n{font-weight:700;font-size:13px;white-space:nowrap}
+.lg{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:middle;margin-right:3px}
+.lg.a{background:var(--green)}.lg.b{background:var(--orange)}
+.adjust{background:var(--card);border:1px dashed var(--orange);border-radius:16px;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.adjust .t{font-size:12.5px;font-weight:700;color:var(--orange)}
+.adj-i{font-size:13.5px}
+.adj-i ul{margin:2px 0 0;padding-left:1.2em;color:var(--ink-2)}
+.reply{background:var(--green-pale);border-radius:14px;padding:8px 12px;font-size:14px}
+.terms{background:var(--yellow-soft);border-radius:14px;padding:8px 12px;font-size:13.5px}
+.note-in{flex:1 1 200px;border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--bg);font-size:14px;min-height:40px}
+.ask-more{display:flex;gap:12px;align-items:center;justify-content:space-between;background:var(--yellow-soft);border-radius:18px;padding:12px 14px;flex-wrap:wrap}
+.qbar{height:8px;border-radius:999px;background:var(--beige);overflow:hidden}
+.qbar span{display:block;height:100%;background:var(--green);border-radius:999px}
+.tag.seek,.mcard .img .tag.seek{background:var(--orange);color:#fff}
+.menu-need{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:13.5px}
+.menu-need li{border-radius:10px;padding:6px 10px;background:var(--bg)}
+.menu-need li.ok{background:var(--green-pale)}
+.menu-need li.part{background:var(--yellow-soft)}
+.menu-need li.ng{background:var(--orange-soft)}
+button.tag{border:0;cursor:pointer;min-height:30px}
+.fit-box{display:flex;flex-direction:column;gap:4px}
+.fit-notes{margin:0;padding-left:1.1em;font-size:12.5px;color:var(--ink-2)}
+.trace{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:12px 18px}
+.trace summary{font-size:14.5px}
+.trace ol{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.trace li{display:flex;gap:10px;align-items:flex-start;opacity:.55}
+.trace li.done{opacity:1}
+.trace li .n{flex:none;width:24px;height:24px;border-radius:50%;background:var(--green-soft);color:var(--green);font-weight:700;font-size:12.5px;display:flex;align-items:center;justify-content:center}
+.trace li b{font-size:14px}
+.fit{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.combo{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.pair-ls{display:grid;grid-template-columns:1fr;gap:8px}
+@media (min-width:700px){.pair-ls{grid-template-columns:1fr 1fr}}
+.warnline{font-size:13px;color:var(--orange);background:var(--orange-soft);border-radius:12px;padding:8px 12px}
+.alt{background:var(--card);border:1px dashed var(--green);border-radius:20px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.alt .face{width:48px;height:48px;font-size:26px}
+.cart-row{display:grid;grid-template-columns:1fr auto;gap:6px 12px;padding:12px 0;border-bottom:1px dashed var(--line);align-items:center}
+.cart-row:last-child{border-bottom:0}
+.cart-row .qline{display:flex;gap:6px;align-items:center;flex-wrap:wrap;grid-column:1/-1}
+.cart-row input{width:80px;text-align:right;border:1.5px solid var(--line);border-radius:12px;padding:7px 10px;background:var(--bg);font-size:16px}
+.cart-total{display:flex;justify-content:space-between;align-items:baseline;font-weight:700;font-size:17px;padding-top:10px;border-top:2px solid var(--line)}
+.region-card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px 16px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:4px;transition:transform .2s,box-shadow .2s}
+.region-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.region-card b{font-size:16px}
+.region-card .em{font-size:20px;letter-spacing:2px}
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (min-width:700px){.rgrid{grid-template-columns:repeat(3,1fr)}}
+.stats-t{width:100%;border-collapse:collapse;font-size:14px}
+.stats-t th,.stats-t td{padding:10px 6px;border-bottom:1px dashed var(--line);text-align:left;vertical-align:top}
+.stats-t td.v{font-weight:700;font-size:17px;white-space:nowrap}
+.stats-t td.def{font-size:12.5px;color:var(--ink-3)}
+.know{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 14px}
+.know .t{font-size:12.5px;font-weight:700;color:var(--ink-2)}
+.know ul{margin:2px 0 0;padding-left:1.2em;font-size:13.5px}
+.checks{background:var(--beige);border-radius:16px;padding:10px 14px}
+.checks .t{font-size:12.5px;font-weight:700;color:var(--ink-2)}
+.checks ul{margin:2px 0 0;padding-left:1.2em;font-size:13.5px;color:var(--ink-2)}
+.checks li::marker,.need .checks li::marker{content:"！ ";color:var(--orange);font-weight:700}
+.need .adj-i li::marker{content:"→ ";color:var(--ink-3)}
+.need .fit-notes li::marker{content:"💡 "}
+/* photos */
+.mcard .img img,.sheet .img img,.photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.mcard .img .tags{z-index:1}
+.lc-top .face{position:relative;overflow:hidden}
+.lc-top .face img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.photo-pick{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.photo{position:relative;width:96px;height:72px;border-radius:14px;overflow:hidden;background:var(--beige);flex:none}
+.file-btn{position:relative;overflow:hidden}
+.file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+/* demo guide + activity */
+.guide{background:var(--card);border:1.5px solid var(--green);border-radius:24px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow)}
+.guide ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;counter-reset:g}
+.guide li{display:flex;align-items:center;gap:10px;font-size:14.5px;counter-increment:g}
+.guide li::before{content:counter(g);flex:none;width:26px;height:26px;border-radius:50%;background:var(--green-soft);color:var(--green);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+.guide li .grow{flex:1}
+.feed{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.feed li{display:flex;gap:10px;align-items:baseline;padding:10px 2px;border-bottom:1px dashed var(--line);font-size:14px}
+.feed li:last-child{border-bottom:0}
+.feed .when{margin-left:auto;font-size:12px;color:var(--ink-3);white-space:nowrap}
+.empty{text-align:center;padding:28px 20px;color:var(--ink-2);font-size:14.5px;align-items:center}
+.empty .big{font-size:40px;line-height:1}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* tablet / PC */
+@media (min-width:700px){
+  .mgrid{grid-template-columns:repeat(3,1fr)}
+  .hscroll{grid-auto-columns:30%}
+  .page-title{font-size:28px}
+  .hello{padding:32px 30px;min-height:220px}
+  .hello h1{font-size:28px}
+  .hello .art{width:210px}
+  .hello .txt,.hello .flow{max-width:calc(100% - 200px)}
+}
+@media (min-width:960px){
+  body{padding-left:calc(var(--side) + 36px);padding-right:36px;padding-bottom:56px}
+  nav.tabs{top:0;right:auto;width:var(--side);border-top:0;border-right:1px solid var(--line);padding:26px 14px;border-radius:0}
+  nav.tabs .in{display:flex;flex-direction:column;gap:6px;height:auto;padding:0}
+  nav.tabs .side-logo{display:flex;margin:0 8px 26px}
+  nav.tabs button{flex-direction:row;justify-content:flex-start;gap:12px;font-size:15px;padding:8px 10px;border-radius:999px}
+  nav.tabs .emo{width:38px;height:38px}
+  nav.tabs button[aria-current="page"]{background:var(--green-soft)}
+  nav.tabs button[aria-current="page"] .emo{background:var(--card);transform:none}
+  header.top{margin:0;padding:6px 0;background:color-mix(in srgb,var(--bg) 92%,transparent)}
+  header.top .logo{display:none}
+  header.top.no-back{display:none}
+  main{padding-top:34px}
+  .toast{bottom:28px;left:calc(50% + var(--side)/2)}
+  nav.tabs .cnt{position:static;margin-left:auto}
+  /* 未ログイン（タブなし）のときは左の余白を取らない */
+  body.no-nav{padding-left:36px}
+  body.no-nav .toast{left:50%}
+  body.no-nav header.top .logo{display:flex}
+  body.no-nav header.top.no-back{display:block}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top"><div class="bar">
+    <button class="back" id="back" type="button" hidden>‹ 戻る</button>
+    <div class="logo"><img src="/icon.svg" alt="">AI地域商社</div>
+  </div></header>
+  <main id="app"><p class="cap" style="text-align:center;padding-top:40px">マルシェを準備しています…🧺</p></main>
+</div>
+
+<!-- タブはログイン中の利用者の種類（飲食店／生産者）に合わせて renderBar() が作る -->
+<nav class="tabs" aria-label="画面の切り替え" hidden><div class="in"></div></nav>
+<div id="sheet"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+const KEY = 'ai-chiiki-shosha-v1';
+const ITEMS = ['ミニトマト','トマト','なす','きゅうり','ピーマン','万願寺とうがらし','玉ねぎ','じゃがいも','小松菜','ほうれん草','キャベツ','大根'];
+const UNITS = ['kg','個','束'];
+const REGION_GROUPS = {
+  '大阪近郊':['大阪市','北摂','能勢・豊能','北河内','中河内','南河内','泉州'],
+  '北摂':['北摂','能勢・豊能'],
+  '能勢・豊能':['能勢・豊能'],
+  '大阪市':['大阪市'],
+  '京都府':['京都府'],
+  '兵庫県':['兵庫県']
+};
+const FARM_REGIONS = ['能勢・豊能','北摂','大阪市','北河内','中河内','南河内','泉州','京都府','兵庫県','奈良県'];
+const PLACES = ['拠点P（豊中・共通受渡拠点）','拠点Q（能勢・道の駅）','亀岡集荷所'];
+const OFF_REASONS = ['形の不揃い','サイズ不揃い','色むら','軽い表面傷'];
+const TABS = ['home','shop','browse','farm','deals','records','settings'];
+// 利用者の種類ごとのタブ。種類はログイン中のアカウント（サーバーに保存）で決まる
+const ROLE_LABEL = {restaurant:'飲食店', producer:'生産者'};
+const ROLE_TABS = {restaurant:['home','shop','deals','records','settings'], producer:['home','farm','deals','settings']};
+const ROLE_PAGES = {restaurant:[...ROLE_TABS.restaurant, 'browse'], producer:ROLE_TABS.producer};
+const TAB_META = {home:['🏠','ホーム'], shop:['🛒','仕入れ'], farm:['🌱','出品'], deals:['🤝','取引'], records:['📖','記録'], settings:['⚙️','設定']};
+const MAX_SAVED = 30;
+// AIの接続状態。未設定なのに使えるように見せない
+function aiStatus(){
+  return server.aiReady ? '<span class="ai-on">AI接続中</span>'
+    : `<div class="ai-off"><span aria-hidden="true">🔌</span><span><b>AIはまだ設定されていません。</b>管理者がAPIキー（GEMINI_API_KEY）を設定すると、AIが仕入れの希望文を読み取ります。いまは簡易読み取りで項目を埋め、項目を選んで続けられます。</span></div>`;
+}
+const ART = {'ミニトマト':'🍅','トマト':'🍅','なす':'🍆','きゅうり':'🥒','ピーマン':'🫑','万願寺とうがらし':'🌶️','玉ねぎ':'🧅','じゃがいも':'🥔','小松菜':'🥬','ほうれん草':'🥬','キャベツ':'🥬'};
+const TINT = {'ミニトマト':'#fde1d8','トマト':'#fde1d8','なす':'#ece2f4','きゅうり':'#e2f0da','ピーマン':'#e2f0da','万願寺とうがらし':'#e6f1d6','玉ねぎ':'#faebd3','じゃがいも':'#f5e8d2','小松菜':'#e2f0da','ほうれん草':'#e2f0da','キャベツ':'#e8f3e0','大根':'#eef4ea'};
+const DAIKON = '<svg viewBox="0 0 64 64" width="1em" height="1em" aria-hidden="true"><path d="M32 4c-4 6-12 6-14 2 2 8 8 12 14 12 6 0 12-4 14-12-2 4-10 4-14-2z" fill="#6aa86e"/><path d="M22 18h20c2 12-2 30-10 42-8-12-12-30-10-42z" fill="#fbfaf4" stroke="#d9d2c0" stroke-width="2"/></svg>';
+const art = item => ART[item] || (item === '大根' ? DAIKON : '🥕');
+const tint = item => TINT[item] || '#f4ecdc';
+
+/* ---------- dates ---------- */
+const pad = n => String(n).padStart(2,'0');
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today0 = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
+const addDays = n => { const d = today0(); d.setDate(d.getDate()+n); return iso(d); };
+const parseISO = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y,m-1,d); };
+const shiftISO = (s,n) => { const d = parseISO(s); d.setDate(d.getDate()+n); return iso(d); };
+const daysUntil = s => Math.round((parseISO(s)-today0())/864e5);
+const WD = '日月火水木金土';
+const rel = s => ({0:'今日',1:'明日',2:'明後日'})[daysUntil(s)] || '';
+const fmtDate = s => { if(!s) return ''; const d = parseISO(s); const r = rel(s); return `${d.getMonth()+1}/${d.getDate()}(${WD[d.getDay()]})${r?' '+r:''}`; };
+const fmtStamp = t => { const d = new Date(t); return `${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const fmtAgo = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'たった今' : m < 60 ? `${m}分前` : m < 1440 ? `${Math.round(m/60)}時間前` : `${Math.round(m/1440)}日前`; };
+const isISO = s => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const h = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const yen = n => n.toLocaleString('ja-JP') + '円';
+const q = (n,u) => `${+(+n).toFixed(1)}${u}`;
+const opt = (list, sel, blank) => (blank!=null?`<option value="">${h(blank)}</option>`:'') + list.map(v => `<option${v===sel?' selected':''}>${h(v)}</option>`).join('');
+const placeShort = p => String(p).replace(/（.*）/, '');
+const pageHead = (title, lead) => `<header class="page-h"><h1 class="page-title">${title}</h1>${lead ? `<p class="lead">${h(lead)}</p>` : ''}</header>`;
+const lowStock = l => l.qty <= Math.max(2 * l.minQty, 2);
+const reduceMotion = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- state ---------- */
+// 出品・在庫（/api/listings）、アカウント（/api/auth）、仕入れ依頼と取引（/api/deals）はサーバーが持ち、全端末で共有する。
+// 画面の位置・下書き・作った仕入れ案・保存した案はこの端末のブラウザに、アカウントごとに分けて保存する。
+const DEFAULT_TEXT = '明後日までに大阪近郊のトマトを10kg、多少形が悪くてもOK';
+const PASS_KEY = 'ai-chiiki-shosha-pass';
+function freshState(){ return {listings:[], planSeq:0, tab:'home', step:'input', draft:{text:DEFAULT_TEXT, req:null, note:''}, plan:null, saved:[], fdraft:null, visited:false, liked:[]}; }
+let S = freshState(), server = {loaded:false, editLocked:false, shared:true, aiReady:false, error:''};
+// me：ログイン中のアカウント（null なら未ログイン）。authChecked：ログイン状態を確認し終えたか
+let me = null, authChecked = false, deals = [], dealsLoaded = false;
+const storeKey = () => me ? `${KEY}:${me.id}` : null;
+function load(){
+  let raw = null;
+  try {
+    raw = JSON.parse(localStorage.getItem(storeKey()));
+    // ログイン機能より前にこの端末へ保存した下書き・記録は、最初にログインしたアカウントに一度だけ引き継ぐ
+    if(!raw){ raw = JSON.parse(localStorage.getItem(KEY)); if(raw) localStorage.removeItem(KEY); }
+  } catch(e) { raw = null; }
+  const base = freshState();
+  // 旧版の保存データは、いま使う項目だけを引き継ぐ
+  S = raw && raw.draft ? {...base, ...Object.fromEntries(Object.keys(base).filter(k => k in raw).map(k => [k, raw[k]]))} : base;
+  if(!TABS.includes(S.tab)) S.tab = 'home';
+  if(!['input','confirm','result'].includes(S.step)) S.step = 'input';
+  if(!Array.isArray(S.saved)) S.saved = [];
+  if(!Array.isArray(S.liked)) S.liked = [];
+  if(S.fdraft && !S.fdraft.d) S.fdraft = null;
+  if(S.fdraft){
+    const fd = FD();
+    S.fdraft = {step:S.fdraft.step, editId:S.fdraft.editId, d:Object.fromEntries(Object.keys(fd).map(k => [k, k in S.fdraft.d ? S.fdraft.d[k] : fd[k]]))};
+    if(!(S.fdraft.step >= 1 && S.fdraft.step <= 5)) S.fdraft.step = 1;
+  }
+  S.listings = [];
+}
+// 共有データ（出品・在庫）はサーバーが正。この端末には保存しない
+function save(){ if(!me) return; try { const {listings, _sugg, ...rest} = S; localStorage.setItem(storeKey(), JSON.stringify(rest)); } catch(e) {} }
+function applyData(d){ S.listings = d.listings || []; }
+const getPass = () => { try { return localStorage.getItem(PASS_KEY) || ''; } catch(e) { return ''; } };
+const setPass = v => { try { localStorage.setItem(PASS_KEY, v); } catch(e) {} };
+
+/* ---------- server data ---------- */
+async function api(path, body){
+  const headers = {'Content-Type':'application/json'};
+  const pc = getPass(); if(body && pc) headers['x-edit-passcode'] = pc;
+  const res = await fetch(path, {method: body ? 'POST' : 'GET', headers, body: body ? JSON.stringify(body) : undefined, cache:'no-store'});
+  let data = {}; try { data = await res.json(); } catch(e) {}
+  // ログインの有効期限切れ・別の端末でログアウトした場合は、ログイン画面に戻す
+  if(res.status === 401 && data.needLogin && me){ me = null; deals = []; dealsLoaded = false; S = freshState(); closeSheet(); render(); toast('ログインが切れました。もう一度ログインしてください', null, 'err'); }
+  return {ok:res.ok, status:res.status, data};
+}
+// 入力中のフォームがある画面は、裏での在庫更新で描き直さない
+const editing = () => !me || (S.tab === 'shop' && S.step !== 'result') || (S.tab === 'farm' && S.fdraft) || S.tab === 'settings' || (S.tab === 'deals' && counterId) || S.tab === 'browse' || Boolean(sheetId);
+async function fetchListings(opts){
+  let r = null;
+  try { r = await api('/api/listings'); } catch(e) {}
+  if(!r || !r.ok){ server.error = 'データを読み込めませんでした。通信状態を確かめて、もう一度読み込んでください。'; if(!opts?.quiet || !server.loaded) render(); return; }
+  applyData(r.data);
+  const first = !server.loaded;
+  server = {loaded:true, editLocked:Boolean(r.data.editLocked), shared:Boolean(r.data.shared), aiReady:Boolean(r.data.aiReady), error:''};
+  // 未ログイン（ログイン画面を入力中）のときは描き直さない
+  if(!me || (opts?.quiet && !first && editing())) return;
+  render();
+}
+async function mutate(body){
+  let r = null;
+  try { r = await api('/api/listings', body); } catch(e) {}
+  if(!r){ toast('通信できませんでした。もう一度試してください'); return null; }
+  if(r.status === 401) return null;
+  if(!r.ok){ toast(`${r.data.error || '保存できませんでした'}（エラーコード ${r.status}）`, null, 'err'); return null; }
+  applyData(r.data);
+  return r.data;
+}
+// 取引：自分が当事者のものだけがサーバーから届く
+async function fetchDeals(opts){
+  if(!me || !me.role) return;
+  let r = null;
+  try { r = await api('/api/deals'); } catch(e) {}
+  if(!r || !r.ok) return;
+  deals = r.data.deals || []; dealsLoaded = true;
+  if(opts?.quiet && editing()){ renderBar(); return; }
+  render();
+}
+const byId = id => S.listings.find(l => l.id === id);
+const isDemoFarm = name => S.listings.some(l => l.demo && l.farm === name);
+const openListings = () => S.listings.filter(l => l.active && l.qty > 0 && l.date >= iso(today0()));
+
+/* ---------- allocation (deterministic) ---------- */
+const SC = 10; // 0.1単位で計算する
+function reasonsFor(l, r){
+  const out = [];
+  if(!l.active) out.push('公開停止中（出荷不可）');
+  if(l.qty <= 0) out.push('在庫なし');
+  if(l.unit !== r.unit) out.push(`単位が${l.unit}のため組み合わせられない`);
+  const lo = iso(today0());
+  if(r.dateMode === 'on' ? l.date !== r.deadline : (l.date > r.deadline || l.date < lo)) out.push(`受渡日${fmtDate(l.date)}が希望日に合わない`);
+  if(r.region && !(REGION_GROUPS[r.region]||[]).includes(l.region)) out.push(`地域が対象外（${l.region}）`);
+  if(l.grade === '規格外' && !r.allowOff) out.push(`規格外（${l.reason}）は含めない指定`);
+  if(r.maxPrice != null && l.price > r.maxPrice) out.push(`単価${yen(l.price)}が上限を超える`);
+  if(r.place && l.place !== r.place) out.push(`受渡場所が違う（${l.place}）`);
+  if(l.active && l.qty > 0 && l.minQty > l.qty) out.push('在庫が最低販売量に届かない');
+  return out;
+}
+const slotKey = l => `${l.date}|${l.from}-${l.to}|${l.place}`;
+const better = (a,b) => a.n !== b.n ? a.n < b.n : a.cost !== b.cost ? a.cost < b.cost : a.key < b.key;
+function solve(ls, T, key){
+  let dp = new Map([[0,{n:0,cost:0,picks:[],key}]]);
+  for(const l of ls){
+    const min = Math.round(l.minQty*SC), step = Math.max(1, Math.round(l.step*SC)), cap = Math.round(l.qty*SC);
+    const opts = [];
+    for(let a = min; a <= cap && a <= T; a += step) opts.push(a);
+    const nd = new Map(dp);
+    for(const [t,e] of dp) for(const a of opts){
+      const nt = t + a; if(nt > T) break;
+      const c = Math.round(a/SC*l.price);
+      const cand = {n: e.picks.some(p => p.farm === l.farm) ? e.n : e.n+1, cost:e.cost+c, picks:[...e.picks,{id:l.id,farm:l.farm,amt:a/SC,cost:c}], key};
+      const cur = nd.get(nt);
+      if(!cur || better(cand,cur)) nd.set(nt,cand);
+    }
+    dp = nd;
+  }
+  dp.delete(0);
+  return dp;
+}
+function allocate(r){
+  const T = Math.round(r.qty*SC);
+  const related = S.listings.filter(l => l.item === r.item);
+  const elig = [], excluded = [];
+  for(const l of related){ const rs = reasonsFor(l,r); rs.length ? excluded.push({id:l.id, reasons:rs}) : elig.push(l); }
+  const slots = new Map();
+  for(const l of elig){ const k = slotKey(l); if(!slots.has(k)) slots.set(k,[]); slots.get(k).push(l); }
+  let best = null, partial = null, maxSlotSum = 0;
+  for(const [k,ls] of slots){
+    maxSlotSum = Math.max(maxSlotSum, ls.reduce((s,l)=>s+Math.round(l.qty*SC),0));
+    const dp = solve(ls,T,k);
+    const ex = dp.get(T);
+    if(ex && (!best || better(ex,best))) best = {...ex, total:T};
+    let mx = 0; for(const t of dp.keys()) if(t > mx) mx = t;
+    if(mx){ const e = {...dp.get(mx), total:mx}; if(!partial || mx > partial.total || (mx === partial.total && better(e,partial))) partial = e; }
+  }
+  const sumAll = elig.reduce((s,l)=>s+Math.round(l.qty*SC),0);
+  let status;
+  if(best) status = 'ok';
+  else if(!elig.length) status = 'none';
+  else if(maxSlotSum >= T) status = 'step';
+  else if(sumAll >= T && slots.size > 1) status = 'slot';
+  else status = 'short';
+  const conv = p => p && {slot:p.key, picks:p.picks, total:p.total/SC, cost:p.cost, n:p.n};
+  return {status, best:conv(best), partial:conv(partial), excluded, eligCount:elig.length, relatedCount:related.length};
+}
+function snapshot(item){
+  const o = {};
+  for(const l of S.listings.filter(l => l.item === item)) o[l.id] = {farm:l.farm, qty:l.qty, unit:l.unit, active:l.active, v:l.v};
+  return o;
+}
+function diffSnap(a, b){
+  const out = [];
+  for(const id of new Set([...Object.keys(a),...Object.keys(b)])){
+    const o = a[id], n = b[id];
+    if(!n){ out.push(`${o.farm}の出品が削除されました`); continue; }
+    if(!o){ out.push(`${n.farm}が${q(n.qty,n.unit)}を新しく登録しました`); continue; }
+    if(o.active && !n.active) out.push(`${n.farm}の${q(o.qty,o.unit)}が出荷不可になりました`);
+    else if(!o.active && n.active) out.push(`${n.farm}が公開を再開しました`);
+    if(o.qty !== n.qty) out.push(`${n.farm}が${q(o.qty,o.unit)}→${q(n.qty,n.unit)}に変更しました`);
+    else if(o.v !== n.v && o.active === n.active) out.push(`${n.farm}が供給条件を変更しました`);
+  }
+  return out;
+}
+function suggest(r){
+  const tries = [];
+  if(!r.allowOff) tries.push(['規格外も含める', {allowOff:true}]);
+  if(r.region) tries.push(['地域の指定を外す', {region:''}]);
+  if(r.maxPrice != null) tries.push(['単価の上限を外す', {maxPrice:null}]);
+  if(r.place) tries.push(['受渡場所の指定を外す', {place:''}]);
+  if(r.dateMode === 'on') tries.push([`${fmtDate(r.deadline)}までの受渡しに広げる`, {dateMode:'by'}]);
+  tries.push([`希望日を${fmtDate(shiftISO(r.deadline,1))}${r.dateMode==='by'?'まで':''}にする`, {deadline:shiftISO(r.deadline,1)}]);
+  const out = [];
+  for(const [label,patch] of tries){
+    const res = allocate({...r,...patch});
+    if(res.status === 'ok') out.push({label, patch, detail:`${q(r.qty,r.unit)}が成立（${res.best.picks.map(p=>p.farm).join('・')}、${yen(res.best.cost)}）`});
+    if(out.length >= 3) break;
+  }
+  return out;
+}
+
+/* ---------- parsing ---------- */
+const z2h = s => s.replace(/[０-９．]/g, c => String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/ｋｇ|キロ(グラム)?/gi,'kg');
+function nextWeekday(wd){ const d = today0(); let add = (wd - d.getDay() + 7) % 7; if(add === 0) add = 7; d.setDate(d.getDate()+add); return iso(d); }
+function ruleParse(text){
+  const t = z2h(text);
+  const found = ITEMS.filter(i => t.includes(i));
+  const items = found.filter(i => !(i === 'トマト' && found.includes('ミニトマト') && !t.replace(/ミニトマト/g,'').includes('トマト')));
+  const m = t.match(/(\d+(?:\.\d+)?)\s*(kg|個|束)/i);
+  let deadline = null;
+  if(/しあさって/.test(t)) deadline = addDays(3);
+  else if(/明後日|あさって/.test(t)) deadline = addDays(2);
+  else if(/明日|あした/.test(t)) deadline = addDays(1);
+  else if(/今日|本日/.test(t)) deadline = addDays(0);
+  else { const md = t.match(/(\d{1,2})\s*[\/月]\s*(\d{1,2})/); const w = t.match(/([月火水木金土日])曜/);
+    if(md){ const d = today0(); d.setMonth(+md[1]-1, +md[2]); if(d < today0()) d.setFullYear(d.getFullYear()+1); deadline = iso(d); }
+    else if(w) deadline = nextWeekday(WD.indexOf(w[1])); }
+  const region = Object.keys(REGION_GROUPS).find(k => t.includes(k.replace('府','').replace('県',''))) || null;
+  const pm = t.match(/(\d{2,5})\s*円/);
+  let allowOff = null;
+  if(/規格外\s*(は)?\s*(不可|NG|だめ|ダメ|なし)|形の?(きれい|良い|いい)/.test(t)) allowOff = false;
+  else if(/形が?悪|不揃い|規格外|B品|訳あり|わけあり/.test(t)) allowOff = true;
+  let out = null;
+  if(/家庭|自宅|個人で/.test(t)) out = 'personal';
+  else if(/全国|発送|宅配/.test(t)) out = 'nationwide';
+  else if(items.length > 1) out = 'multi';
+  return {item: items[0] || null, qty: m ? +m[1] : null, unit: m ? m[2].toLowerCase() : null, deadline,
+    dateMode: deadline ? (/まで|以内/.test(t) ? 'by' : 'on') : null, region, maxPrice: pm ? +pm[1] : null,
+    allowOff, place:null, outOfScope:out, unreadable: !items.length && !m};
+}
+function clean(p){
+  p = p || {};
+  const num = v => (typeof v === 'number' && isFinite(v) && v > 0) ? v : (typeof v === 'string' && isFinite(+v) && +v > 0 ? +v : null);
+  return {
+    item: ITEMS.includes(p.item) ? p.item : null,
+    qty: num(p.qty) != null ? Math.min(num(p.qty), 200) : null,
+    unit: UNITS.includes(p.unit) ? p.unit : 'kg',
+    deadline: isISO(p.deadline) && p.deadline >= iso(today0()) ? p.deadline : null,
+    dateMode: p.dateMode === 'on' ? 'on' : 'by',
+    region: REGION_GROUPS[p.region] ? p.region : '',
+    maxPrice: num(p.maxPrice),
+    allowOff: p.allowOff === true,
+    allowOffStated: p.allowOff === true || p.allowOff === false,
+    place: PLACES.includes(p.place) ? p.place : '',
+    outOfScope: ['personal','nationwide','multi'].includes(p.outOfScope) ? p.outOfScope : null,
+    unreadable: p.unreadable === true
+  };
+}
+
+/* ---------- UI shell ---------- */
+let busy = false, flashId = null, justAdded = null, wizErr = [], toastTimer = null, firstVisit = false, animate = false, sheetId = null, sheetMode = 'menu';
+// authView：未ログイン時のログイン／新規登録画面 {role, mode:'login'|'signup'}（null なら利用者選択画面）
+// dealFilter：取引画面の絞り込み。counterId：条件変更フォームを開いている取引。dealBusy：取引の操作を送信中（二重押しよけ）
+let authView = null, authBusy = false, dealFilter = 'all', counterId = null, dealBusy = false;
+// kind: 'ok'（成功）・'err'（失敗）・省略（お知らせ）
+function toast(text, action, kind){
+  const el = $('#toast');
+  el.className = 'toast' + (kind ? ' ' + kind : '');
+  el.setAttribute('role', kind === 'err' ? 'alert' : 'status');
+  el.innerHTML = `<span>${kind === 'ok' ? '✅ ' : kind === 'err' ? '⚠️ ' : ''}${h(text)}</span>` + (action ? `<button type="button" id="toast-act">${h(action.label)}</button>` : '');
+  el.hidden = false;
+  if(action) $('#toast-act').onclick = () => { el.hidden = true; action.run(); };
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 5200);
+}
+function go(tab){ S.tab = tab; justAdded = null; counterId = null; closeSheet(); animate = true; save(); render(); window.scrollTo(0,0); fetchListings({quiet:true}); fetchDeals({quiet:true}); }
+
+// 戻るボタンの行き先。null なら隠す
+function backTarget(){
+  if(!me) return authView ? () => { authView = null; } : null;
+  if(S.tab === 'browse') return () => { S.tab = 'home'; };
+  if(S.tab === 'shop' && S.step === 'confirm') return () => { S.step = 'input'; S.draft.note = ''; };
+  if(S.tab === 'farm' && S.fdraft && S.fdraft.step > 1) return () => { S.fdraft.step--; wizErr = []; };
+  return null;
+}
+function renderBar(){
+  const back = Boolean(backTarget());
+  $('#back').hidden = !back;
+  $('header.top').classList.toggle('no-back', !back);
+  const nav = $('nav.tabs'), tabs = me && me.role ? ROLE_TABS[me.role] : null;
+  nav.hidden = !tabs;
+  document.body.classList.toggle('no-nav', !tabs);
+  if(!tabs) return;
+  const todo = deals.filter(needsMe).length;
+  const inner = nav.querySelector('.in');
+  inner.style.setProperty('--n', tabs.length);
+  inner.innerHTML = `<div class="logo side-logo"><img src="/icon.svg" alt="">AI地域商社</div>` + tabs.map(t => `<button type="button" data-tab="${t}"${t === S.tab ? ' aria-current="page"' : ''}><span class="emo" aria-hidden="true">${TAB_META[t][0]}</span>${TAB_META[t][1]}${t === 'deals' && todo ? `<span class="cnt" aria-label="対応が必要な取引 ${todo}件">${todo}</span>` : ''}</button>`).join('');
+}
+function render(){
+  const app = $('#app');
+  const errBox = server.error ? `<div class="msg err"><b>⚠️ ${h(server.error)}</b><div class="row" style="margin-top:8px"><button type="button" class="btn small" id="retry">もう一度読み込む</button></div></div>` : '';
+  if(!authChecked){ renderBar(); app.innerHTML = SKELETON; return; }
+  // 未ログイン：利用者選択 → ログイン／新規登録。役割が未設定のアカウント：役割の設定
+  if(!me){ (authView ? renderAuth : renderRoleSelect)(); renderBar(); return; }
+  if(!me.role){ renderRoleSetup(); renderBar(); return; }
+  if(!ROLE_PAGES[me.role].includes(S.tab)) S.tab = 'home';
+  if(!server.loaded && S.tab !== 'settings'){ renderBar(); app.innerHTML = errBox || SKELETON; return; }
+  ({home:renderHome, shop:renderShop, browse:renderBrowse, farm:renderFarm, deals:renderDeals, records:renderRecords, settings:renderSettings})[S.tab]();
+  renderBar();
+  if(errBox) app.insertAdjacentHTML('afterbegin', errBox);
+  if(animate){ app.classList.remove('enter'); void app.offsetWidth; app.classList.add('enter'); animate = false; }
+}
+
+const SKELETON = `<div class="skel" aria-busy="true" aria-label="読み込み中"><i style="height:190px"></i><i style="height:150px"></i><i style="height:56px;border-radius:999px"></i><i style="height:56px;border-radius:999px"></i><p class="cap" style="text-align:center">マルシェを準備しています…🧺</p></div>`;
+
+/* ---------- produce pieces ---------- */
+function prodTags(l){
+  return [
+    lowStock(l) ? '<span class="tag hot">残りわずか</span>' : '',
+    l.grade === '規格外' ? `<span class="tag">規格外</span>` : '',
+    l.surplus ? '<span class="tag">余剰</span>' : ''
+  ].join('');
+}
+// 写真は扱わない。野菜のイラストで表示する
+const thumb = l => `<span aria-hidden="true">${art(l.item)}</span>`;
+// 情報の更新日時（在庫・価格を変えたときに記録。古い情報かどうかを判断できるように）
+const updText = l => { const t = l.updatedAt || l.editedAt || l.at; return t ? `情報の更新：${fmtAgo(t)}（${fmtStamp(t)}）` : '情報の更新日時：未記録'; };
+const whereLine = l =>`<span>📍 ${h(l.region)}</span><span>👨‍🌾 ${h(l.farm)}</span>`;
+// 飲食店側からの見え方（出品の確認画面のプレビュー）
+function previewCard(l){
+  return `<article class="mcard" style="--t:${tint(l.item)}">
+    <div class="img">${thumb(l)}<div class="tags">${prodTags(l)}</div></div>
+    <div class="body">
+      <h3>${h(l.item)}${l.variety ? `<small>${h(l.variety)}</small>` : ''}</h3>
+      <div class="where">${whereLine(l)}</div>
+      <div class="pr"><b>¥${l.price.toLocaleString('ja-JP')}<span class="cap">/${h(l.unit)}</span></b><span class="left ${lowStock(l)?'hot':''}">残り${q(l.qty,l.unit)}</span></div>
+      <div class="hand">🧺 ${h(fmtDate(l.date))}・${h(placeShort(l.place))}</div>
+    </div>
+  </article>`;
+}
+
+/* ---------- limited menu (規格外・余剰も生かす) ---------- */
+// ---- メニューを考える：仕入れ案の食材 × 一般的な料理例（AIはAPIキーがあるときだけ任意で使う） ----
+// [メニュー名, コンセプト, 使う食材（この品目表の中）, その他の材料（このアプリでは扱わない）, 活用のしかた]
+const MENUS = [
+  ['ラタトゥイユ','夏野菜を煮込む南仏風の一皿',['トマト','なす','ピーマン','玉ねぎ'],['オリーブオイル','にんにく'],'角切りにして順に炒め、トマトで煮込む'],
+  ['夏野菜の揚げびたし','揚げた野菜をだしに浸す和の小鉢',['なす','万願寺とうがらし','ピーマン'],['だし','しょうゆ'],'素揚げして温かいだしに浸す。作り置きに向く'],
+  ['トマトと茄子の冷製パスタ','トマトの酸味と焼きなすの冷たいパスタ',['トマト','なす'],['パスタ','オリーブオイル'],'焼きなすとトマトを和えて冷やす'],
+  ['焼き万願寺のじゃこ添え','焼いた万願寺にじゃこを合わせる一品',['万願寺とうがらし'],['ちりめんじゃこ','しょうゆ'],'丸ごと焼いて、じゃこと醤油を合わせる'],
+  ['肉じゃが','じゃがいもと玉ねぎを甘辛く煮る定番',['じゃがいも','玉ねぎ'],['肉','だし','しょうゆ'],'大きめに切って煮崩れに注意して煮る'],
+  ['コールスロー','キャベツを細切りにして和えるサラダ',['キャベツ','玉ねぎ'],['マヨネーズ','酢'],'細切りにして塩もみしてから和える'],
+  ['ほうれん草のキッシュ','ほうれん草と玉ねぎの焼き料理',['ほうれん草','玉ねぎ','じゃがいも'],['卵','生クリーム','生地'],'下ゆでしたほうれん草と炒めた玉ねぎを卵液で焼く'],
+  ['小松菜と大根の煮びたし','だしで煮る小鉢',['小松菜','大根'],['だし'],'大根を下煮してから小松菜を加える'],
+  ['きゅうりとミニトマトのピクルス','彩りのよい常備菜',['きゅうり','ミニトマト'],['酢','砂糖'],'切って甘酢に漬ける'],
+  ['カプレーゼ','トマトとチーズの前菜',['トマト'],['モッツァレラ','バジル','オリーブオイル'],'厚めに切ってチーズと交互に並べる'],
+  ['麻婆茄子','なすを辛味噌で炒める中華の定番',['なす','ピーマン'],['ひき肉','豆板醤'],'なすを油通ししてから合わせる']
+];
+let menuSel = [], menuServ = '', menuPurpose = '', menuAI = null;
+// 1食あたりの使用量の一般的な目安（g）。料理・切り方で大きく変わるため、必要量は「目安」と表示する
+const GRAMS = {'ミニトマト':50,'トマト':80,'なす':80,'きゅうり':50,'ピーマン':40,'万願寺とうがらし':40,'玉ねぎ':50,'じゃがいも':100,'小松菜':50,'ほうれん草':50,'キャベツ':60,'大根':80};
+function openMenu(ids){ menuSel = [...new Set(ids)].filter(id => byId(id)); menuAI = null; sheetMode = 'menu'; sheetId = 'menu'; renderSheet(); }
+// 食数から必要量の目安を出し、登録在庫と比べる（kg以外の単位は計算しない）
+function menuQtyNote(item, l){
+  const n = +menuServ;
+  if(!(n > 0)) return '';
+  const need = Math.round(n * (GRAMS[item] || 0) / 100) / 10;
+  if(!l) return `<span class="cap qty-note">必要量の目安 約${q(need, 'kg')}（${n}食×約${GRAMS[item]}g）→ <b>登録商品なし・全量不足</b></span>`;
+  if(l.unit !== 'kg') return `<span class="cap qty-note">必要量の目安 約${q(need, 'kg')}（出品は${h(l.unit)}単位のため、足りるかは未確認）</span>`;
+  return need <= l.qty ? `<span class="cap qty-note">必要量の目安 約${q(need, 'kg')} ≦ 在庫${q(l.qty, 'kg')} → <b>足りる見込み</b></span>`
+    : `<span class="cap qty-note" style="color:var(--orange)">必要量の目安 約${q(need, 'kg')} ＞ 在庫${q(l.qty, 'kg')} → <b>約${q(need - l.qty, 'kg')}不足</b>（ほかの農家と組み合わせが必要）</span>`;
+}
+// 登録食材の原価の目安（1食あたり）＝ 一般的な使用量の目安(g) × 登録単価(円/kg)。kg以外の単位・出品のない食材は計算しない
+function menuCost(needs, sel, avail){
+  const parts = [], skip = [];
+  for(const i of needs){
+    const l = sel.find(x => x.item === i) || avail(i);
+    if(!l) { skip.push(`${i}（出品なし）`); continue; }
+    if(l.unit !== 'kg') { skip.push(`${i}（${l.unit}単位のため）`); continue; }
+    parts.push({i, farm:l.farm, yen:GRAMS[i] / 1000 * l.price});
+  }
+  if(!parts.length) return '';
+  const per = parts.reduce((s, p) => s + p.yen, 0), n = +menuServ;
+  return `<div class="facts-box"><div class="t">💴 登録食材の原価の目安（1食あたり）</div>
+    <b style="font-size:18px">約${yen(Math.round(per))}</b>${n > 0 ? `　<span class="cap">${n}食で約${yen(Math.round(per * n))}</span>` : ''}
+    <div class="cap">${parts.map(p => `${h(p.i)} 約${yen(Math.round(p.yen))}（${GRAMS[p.i]}g×登録単価・${h(p.farm)}）`).join('・')}</div>
+    <div class="cap">使用量は一般的な目安です。その他の材料・送料・手数料は含みません。${skip.length ? `計算に含めていない食材：${skip.map(h).join('・')}。` : ''}販売価格や利益率は、お店の価格設定がないため計算していません。</div></div>`;
+}
+const gradeMark = l => l.grade === '規格外' ? `・規格外（${h(l.reason)}）` : l.surplus ? '・余剰' : '';
+function menuSheet(){
+  const sel = menuSel.map(byId).filter(Boolean), selItems = new Set(sel.map(l => l.item)), open = openListings();
+  const avail = item => open.filter(l => l.item === item && !menuSel.includes(l.id)).sort((x,y) => x.price - y.price)[0];
+  const others = [...new Set(open.map(l => l.item))].filter(i => !selItems.has(i));
+  const off = sel.filter(l => l.grade === '規格外' || l.surplus);
+  return sheetFrame('限定メニュー案', plainTop('🍳 限定メニュー案'), `
+    <div><div class="sec-label">仕入れ案の食材（登録データ）</div>
+      <div class="tags" style="margin-top:6px">${sel.length ? sel.map(l => `<button type="button" class="tag good" data-menudel="${h(l.id)}" title="外す">${art(l.item)} ${h(l.item)}・${h(l.farm)}${gradeMark(l)} ✕</button>`).join('') : '<span class="muted">まだ選ばれていません</span>'}</div>
+      ${others.length ? `<div class="tags" style="margin-top:8px"><span class="cap">食材を足す：</span>${others.map(i => { const l = avail(i); return l ? `<button type="button" class="tag" data-menuadd="${h(l.id)}">＋ ${art(i)} ${h(i)}</button>` : ''; }).join('')}</div>` : ''}</div>
+    ${off.length ? `<div class="msg ok">規格外・余剰の食材（${off.map(l => h(l.farm + 'の' + l.item)).join('・')}）を含みます。形を問わない煮込み・刻む料理・ソースに向いています。</div>` : ''}
+    <div class="grid">
+      <div class="field"><label for="mn-purpose">使い道（任意）</label><input id="mn-purpose" data-mn="purpose" maxlength="30" value="${h(menuPurpose)}" placeholder="例：週末の限定ランチ"></div>
+      <div class="field"><label for="mn-serv">何食分？（任意）</label><input id="mn-serv" data-mn="serv" type="number" inputmode="numeric" min="1" max="500" value="${h(menuServ)}" placeholder="例：30"></div>
+    </div>
+    <p class="cap">食数を入れると、1食あたりの<b>一般的な使用量の目安</b>から必要量を出し、登録されている在庫と比べます（料理によって大きく変わります）。</p>
+    ${server.aiReady && sel.length ? `<button type="button" class="btn small btn-sub" id="menu-ai">✨ AIにメニュー名・紹介文を考えてもらう</button>` : ''}
+    ${menuAI ? `<div class="explain"><b>✨ AIのメニュー案</b>（AIが考えた案です。在庫・価格は下の登録データで確認してください）<br>${h(menuAI)}</div>` : ''}
+    <div id="menu-out">${menuOut()}</div>`);
+}
+function menuOut(){
+  const sel = menuSel.map(byId).filter(Boolean), selItems = new Set(sel.map(l => l.item)), open = openListings();
+  const avail = item => open.filter(l => l.item === item && !menuSel.includes(l.id)).sort((x,y) => x.price - y.price)[0];
+  const ideas = MENUS.map(m => ({m, use:m[2].filter(i => selItems.has(i))})).filter(x => x.use.length).sort((a,b) => b.use.length / b.m[2].length - a.use.length / a.m[2].length).slice(0, 4);
+  return `<p class="cap">メニュー名・コンセプト・活用のしかたは<b>一般的な料理例</b>です。価格・在庫・出荷日は登録データで、在庫は確保されていません。</p>
+    ${!sel.length ? '<div class="card empty"><div class="big">🍳</div>食材を1つ以上選ぶと、メニューのアイデアを表示します。</div>'
+      : ideas.length ? ideas.map(({m:[name, concept, needs, extras, how]}) => `<article class="combo">
+        <div class="sec-h"><b style="font-size:17px">${h(name)}</b><span class="tag sun">料理例</span></div>
+        <p class="cap">コンセプト：${h(concept)}</p>
+        <p style="font-size:14px">活用のしかた：${h(how)}</p>
+        <div class="sec-label">食材と仕入れ情報の確認状況</div>
+        <ul class="menu-need">${needs.map(i => { const s = sel.find(l => l.item === i), a = !s && avail(i);
+          return s ? `<li class="ok">✓ ${art(i)} ${h(i)}：<b>選択済み</b>・${h(s.farm)}${gradeMark(s)}・¥${s.price.toLocaleString('ja-JP')}/${h(s.unit)}・残り${q(s.qty,s.unit)}・${h(fmtDate(s.date))}出荷（登録データ）${menuQtyNote(i, s)}</li>`
+            : a ? `<li class="part">△ ${art(i)} ${h(i)}：<b>仕入れ可能（未選択）</b>・${h(a.farm)}・¥${a.price.toLocaleString('ja-JP')}/${h(a.unit)}・残り${q(a.qty,a.unit)}・${h(fmtDate(a.date))}出荷 <button type="button" class="link" data-menuadd="${h(a.id)}" style="min-height:auto;font-size:13px">＋選ぶ</button>${menuQtyNote(i, a)}</li>`
+            : `<li class="ng">✗ ${art(i)} ${h(i)}：<b>不足</b>（いま登録されている出品がありません）${menuQtyNote(i, null)}</li>`; }).join('')}</ul>
+        ${(() => { const miss = needs.filter(i => !sel.some(l => l.item === i) && !avail(i)); return miss.length ? `<div class="msg warn">この料理に必要な登録食材のうち、${miss.map(h).join('・')}はいま出品がありません。すべての食材がそろうとは限りません。</div>` : ''; })()}
+        ${menuCost(needs, sel, avail)}
+        <p class="cap">その他の材料（このアプリでは扱っていません）：${extras.map(h).join('・')}</p>
+      </article>`).join('')
+      : '<div class="card empty"><div class="big">🍳</div>選んだ食材を使う料理例が、まだ登録されていません。ほかの食材を足してみてください。</div>'}`;
+}
+
+/* ---------- sheet ---------- */
+function closeSheet(){ sheetId = null; const el = $('#sheet'); if(el) el.innerHTML = ''; document.body.style.overflow = ''; }
+const X_BTN = '<button type="button" class="x" data-close-sheet aria-label="閉じる">✕</button>';
+const sheetFrame = (label, top, inner, t) => `<div class="sheet-bg" data-close-sheet><div class="sheet" role="dialog" aria-modal="true" aria-label="${h(label)}"${t ? ` style="--t:${t}"` : ''}>${top}<div class="in">${inner}</div></div></div>`;
+const plainTop = title => `<div style="position:relative;padding:22px 64px 0 22px"><h2 style="font-size:21px">${title}</h2>${X_BTN}</div>`;
+function renderSheet(){
+  const el = $('#sheet');
+  let html = '';
+  if(sheetMode === 'menu' && sheetId) html = menuSheet();
+  if(sheetMode === 'send' && sheetId) html = sendSheet();
+  if(sheetMode === 'listing' && sheetId) html = listingSheet();
+  if(!html){ closeSheet(); return; }
+  const scrollTop = el.querySelector('.sheet')?.scrollTop || 0;
+  el.innerHTML = html;
+  el.querySelector('.sheet').scrollTop = scrollTop;
+  document.body.style.overflow = 'hidden';
+  if(!scrollTop) el.querySelector('.x')?.focus();
+}
+
+/* ---------- home ---------- */
+const shopResumable = () => (S.step === 'confirm' && S.draft.req) || (S.step === 'input' && !S.plan && S.draft.text && S.draft.text !== DEFAULT_TEXT);
+const HELLO_ART = `<svg class="art" viewBox="0 0 200 170" aria-hidden="true">
+  <circle cx="160" cy="38" r="22" fill="#f6d77a" opacity=".85"/>
+  <path d="M30 70h120l-8 22H38z" fill="#fffdf8"/>
+  <path d="M30 70h20v12q-10 8-20 0zM70 70h20v12q-10 8-20 0zM110 70h20v12q-10 8-20 0z" fill="#8cc79a"/>
+  <path d="M50 70h20v12q-10 8-20 0zM90 70h20v12q-10 8-20 0zM130 70h20v12q-10 8-20 0z" fill="#fdeadb"/>
+  <rect x="42" y="92" width="100" height="58" rx="8" fill="#fffdf8"/>
+  <rect x="38" y="140" width="108" height="14" rx="7" fill="#e9dcc2"/>
+  <circle cx="68" cy="132" r="13" fill="#f19a7f"/><path d="M64 120q4 3 8 0" stroke="#6aa86e" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <ellipse cx="96" cy="131" rx="9" ry="15" fill="#a98bc4" transform="rotate(25 96 131)"/><path d="M100 116l6-4" stroke="#6aa86e" stroke-width="4" stroke-linecap="round"/>
+  <path d="M118 140q4-26 18-28q-2 20-18 28z" fill="#8cc79a"/><path d="M126 140q-12-18-4-30q10 12 4 30z" fill="#6aa86e"/>
+  <path d="M168 150q-6-22 6-36q10 18-6 36z" fill="#8cc79a" opacity=".8"/><path d="M14 150q2-18 16-24q-2 18-16 24z" fill="#8cc79a" opacity=".7"/>
+</svg>`;
+/* ---------- 利用者選択・ログイン（未ログイン時） ---------- */
+const ROLE_CARDS = {
+  restaurant:{emo:'🍽️', title:'飲食店の方', desc:'必要な食材を見つけて、仕入れをもっとスムーズに。', btn:'仕入れ案を作る'},
+  producer:{emo:'🌾', title:'生産者の方', desc:'育てた食材を飲食店につなぎ、新しい販路を広げる。', btn:'販売できるものを登録'},
+};
+function roleCards(attr){
+  return `<div class="role-cards">${Object.entries(ROLE_CARDS).map(([role, c]) => `<div class="role-card" data-role-card>
+      <span class="ic" aria-hidden="true">${c.emo}</span>
+      <h2>${c.title}</h2>
+      <p class="desc">${c.desc}</p>
+      <button type="button" class="btn btn-main" ${attr}="${role}">${c.btn}</button>
+    </div>`).join('')}</div>`;
+}
+function renderRoleSelect(){
+  $('#app').innerHTML = `${pageHead('どちらで使いますか？', '飲食店の方は仕入れ案づくりと仕入れ依頼、生産者の方は出品と依頼への回答ができます。')}
+    ${roleCards('data-start')}
+    <p class="switch" style="text-align:center">すでにアカウントをお持ちの方は <button type="button" class="link" data-auth="login">ログイン</button></p>
+    <p class="cap">表示中のデモ農家（A農家など）・在庫・価格はすべて架空のデモデータです。このアプリは仕入れ依頼と条件の合意、取引の進み具合の記録までを扱い、決済・配送・在庫の確保は行いません。</p>`;
+}
+function renderAuth(){
+  const {role, mode} = authView, login = mode === 'login', P = role === 'producer';
+  const title = login ? 'ログイン' : `${ROLE_LABEL[role]}として登録`;
+  $('#app').innerHTML = `<div class="auth">${pageHead(title, login ? 'ログインすると、登録した種類（飲食店／生産者）の画面が開きます。' : 'ログインIDとパスワードを決めてください。次回からはログインするだけで使えます。')}</div>
+    <form class="card auth" id="auth-form" novalidate>
+      ${!login ? `<span class="role-pill">${ROLE_CARDS[role].emo} ${ROLE_LABEL[role]}として使う</span>` : ''}
+      <div class="field"><label for="a-id">ログインID（半角英数字3〜30文字）</label><input id="a-id" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="30" required></div>
+      <div class="field"><label for="a-pw">パスワード${login ? '' : '（8文字以上）'}</label><input id="a-pw" type="password" autocomplete="${login ? 'current-password' : 'new-password'}" maxlength="100" required></div>
+      ${!login ? `<div class="field"><label for="a-name">${P ? 'お名前（取引相手に表示）' : '店名（生産者に表示）'}</label><input id="a-name" maxlength="30" placeholder="${P ? '例：山田 花子' : '例：ビストロ北浜'}" required></div>` : ''}
+      ${!login && P ? `<div class="field"><label for="a-farm">農家名（出品と取引に表示。あとから変更できません）</label><input id="a-farm" maxlength="30" placeholder="例：森の農園" required></div>` : ''}
+      <div id="auth-err"></div>
+      <button type="submit" class="btn btn-main" id="auth-submit">${login ? 'ログイン' : '登録して始める'}</button>
+      <p class="switch">${login ? `アカウントがない方は <button type="button" class="link" data-auth="signup">新しく登録</button>` : `登録済みの方は <button type="button" class="link" data-auth="login">ログイン</button>`}</p>
+      ${!login ? `<p class="cap">飲食店か生産者かは、取引の記録と結びつくため登録後に変更できません。パスワードはハッシュ化して保存します。パスワードを忘れたときの再設定機能はまだありません。</p>` : ''}
+    </form>`;
+  $('#a-id')?.focus();
+}
+// 役割が未設定のアカウント（通常の登録では起きない）。一度だけ設定でき、設定後は変更できない
+function renderRoleSetup(){
+  $('#app').innerHTML = `${pageHead('どちらで使いますか？', 'このアカウントの利用者の種類がまだ設定されていません。一度設定すると変更できません。')}
+    ${roleCards('data-setrole')}
+    <div class="field"><label for="rs-farm">生産者を選ぶ場合の農家名</label><input id="rs-farm" maxlength="30" placeholder="例：森の農園"></div>
+    <div id="rs-err"></div>`;
+}
+async function doAuth(){
+  if(authBusy || !authView) return;
+  const v = id => ($('#' + id)?.value || '').trim(), {role, mode} = authView;
+  const body = mode === 'login' ? {op:'login', loginId:v('a-id'), password:$('#a-pw').value}
+    : {op:'signup', role, loginId:v('a-id'), password:$('#a-pw').value, name:v('a-name'), farm:v('a-farm')};
+  const btn = $('#auth-submit'); authBusy = true; btn.disabled = true; btn.textContent = mode === 'login' ? 'ログインしています…' : '登録しています…';
+  let r = null; try { r = await api('/api/auth', body); } catch(e) {}
+  authBusy = false;
+  if(!r || !r.ok){ btn.disabled = false; btn.textContent = mode === 'login' ? 'ログイン' : '登録して始める'; $('#auth-err').innerHTML = `<div class="msg err">${h(r ? r.data.error || 'うまくいきませんでした' : '通信できませんでした。もう一度試してください')}</div>`; return; }
+  authView = null;
+  signedIn(r.data.user, mode === 'signup', true);
+  // 選んだカードとアカウントの種類が違うときは、アカウントの種類を優先する（勝手に書き換えない）
+  if(role && me.role && me.role !== role){ toast(`このアカウントは${ROLE_LABEL[me.role]}として登録されています。${ROLE_LABEL[me.role]}の画面を表示します`); return; }
+  if(role === 'restaurant'){ S.step = 'input'; go('shop'); }
+  else if(role === 'producer'){ if(!S.fdraft) S.fdraft = newDraft(); go('farm'); }
+}
+// fromLogin：ログイン操作をした直後（ホームから始める）。読み込み直しのときは前回の画面を続ける
+function signedIn(user, isNew, fromLogin){
+  me = user; deals = []; dealsLoaded = false; counterId = null; dealFilter = 'all';
+  load();
+  if(fromLogin) S.tab = 'home';
+  if(S.fdraft && !S.fdraft.editId) S.fdraft.d.farm = me.farm || '';
+  firstVisit = isNew || !S.visited; S.visited = true;
+  animate = true; save(); render(); window.scrollTo(0,0);
+  fetchListings({quiet:true}); fetchDeals();
+}
+async function logout(){
+  try { await api('/api/auth', {op:'logout'}); } catch(e) {}
+  me = null; deals = []; dealsLoaded = false; S = freshState(); authView = null; closeSheet();
+  animate = true; render(); window.scrollTo(0,0); toast('ログアウトしました');
+}
+
+/* ---------- 取引の状態と、次にやること ---------- */
+const OPEN_ST = ['requested','countered'], LIVE_ST = ['matched','preparing','handed'], END_ST = ['completed','declined','cancelled'];
+// 相手待ちではなく、自分の操作が必要な取引（取りやめ以外の操作ができる）
+const needsMe = d => (d.actions || []).some(a => a !== 'cancel');
+const counterpart = d => d.side === 'restaurant' ? `${d.farm}${d.demo ? '（デモ農家）' : ''}` : d.restaurantName;
+const DEAL_FILTERS = {
+  todo:['対応が必要', needsMe],
+  open:['依頼・交渉中', d => OPEN_ST.includes(d.status)],
+  answered:['生産者からの回答', d => d.status !== 'requested' && d.history.some(x => x.by === 'producer')],
+  live:['成立・進行中', d => LIVE_ST.includes(d.status)],
+  history:['取引履歴', d => END_ST.includes(d.status)],
+  all:['すべて', () => true],
+};
+const filtersFor = role => role === 'restaurant' ? ['todo','open','answered','live','history','all'] : ['todo','open','live','history','all'];
+const dealsBy = f => deals.filter(DEAL_FILTERS[f][1]);
+// 状態ラベル：todo（自分の番）・wait（相手待ち）・ok（成立・進行中）・done（完了）・end（お断り・取りやめ）
+function stLabel(d){
+  const R = d.side === 'restaurant';
+  return ({
+    requested: R ? ['回答待ち','wait'] : ['新しい依頼','todo'],
+    countered: R ? ['条件変更の提案','todo'] : ['回答待ち','wait'],
+    matched: R ? ['取引成立','ok'] : ['取引成立','todo'],
+    preparing: R ? ['準備中','ok'] : ['準備中','todo'],
+    handed: R ? ['受け取り確認待ち','todo'] : ['受け渡し済み','wait'],
+    completed: ['取引完了','done'],
+    declined: ['お断り','end'],
+    cancelled: ['取りやめ','end'],
+  })[d.status] || [d.status, 'end'];
+}
+// 今の状態と、次に必要な操作（実際の状態から決める）
+function nextInfo(d){
+  const R = d.side === 'restaurant', t = d.terms, when = `${fmtDate(t.date)} ${t.from}〜${t.to}・${placeShort(t.place)}`;
+  const by = d.cancelledBy === d.side ? 'あなた' : (R ? '生産者' : '飲食店');
+  return ({
+    requested: R ? ['生産者からの回答を待っています', '生産者が依頼を受けるか、断るか、条件の変更を提案します。まだ取引は成立していません。']
+      : ['新しい仕入れ依頼があります', '「依頼を受ける」と、この条件で取引成立になります。条件が合わなければ変更を提案するか、断ってください。'],
+    countered: R ? ['生産者から条件変更の提案が届いています', '変更された条件を確認して、同意するか、条件を出し直してください。同意すると取引成立になります。']
+      : ['飲食店からの回答を待っています', '提案した条件に飲食店が同意すると、取引成立になります。'],
+    matched: R ? ['取引が成立しました', `生産者が食材の準備を始めるまでお待ちください。受け渡し：${when}`]
+      : ['取引が成立しました', '食材の準備を始めたら「準備を始める」を押してください。成立しても出品の数量は自動では減りません。'],
+    preparing: R ? ['食材の準備中です', `受け渡し：${when}。受け取ったあとに確認をお願いします。`]
+      : ['食材を準備してください', `合意した日時・場所で受け渡したら「受け渡しました」を押してください。受け渡し：${when}`],
+    handed: R ? ['食材の受け取りを確認してください', '生産者が受け渡し済みにしました。受け取ったら「受け取りました」を押してください。']
+      : ['飲食店の受け取り確認を待っています', '飲食店が受け取りを確認すると、取引完了になります。'],
+    completed: ['取引が完了しました', d.completedAt ? `${fmtStamp(d.completedAt)} に受け取りが確認されました。` : ''],
+    declined: R ? ['生産者がこの依頼をお断りしました', 'ほかの農家さんの在庫で、仕入れ案を作り直せます。'] : ['この依頼はお断りしました', ''],
+    cancelled: ['この取引は取りやめになりました', `${by}が取りやめました。`],
+  })[d.status] || ['', ''];
+}
+const PROG = ['依頼','回答・合意','成立','準備','受け渡し','完了'];
+function progress(d){
+  let i = {requested:1, countered:1, matched:2, preparing:3, handed:4, completed:6}[d.status];
+  const stop = d.status === 'declined' || d.status === 'cancelled';
+  if(stop) i = d.history.some(x => x.action === 'prepare') ? 3 : d.matchedAt ? 2 : 1;
+  return `<ol class="prog${stop ? ' stop' : ''}" aria-label="取引の進み具合">${PROG.map((p, k) => `<li class="${k < i ? 'done' : k === i ? 'now' : ''}"${k === i ? ' aria-current="step"' : ''}><i></i>${stop && k === i ? (d.status === 'declined' ? 'お断り' : '取りやめ') : p}</li>`).join('')}</ol>`;
+}
+const ACT_LABEL = {
+  accept: d => d.side === 'producer' ? ['依頼を受ける（取引成立）','btn-main'] : ['この条件に同意する（取引成立）','btn-main'],
+  counter: d => d.side === 'producer' ? ['条件の変更を提案する','btn-sub'] : ['条件を出し直す','btn-sub'],
+  decline: () => ['依頼を断る','danger'],
+  cancel: d => [d.status === 'requested' ? '依頼を取り下げる' : d.status === 'countered' ? '提案を断って取りやめる' : '取引を取りやめる','danger'],
+  prepare: () => ['準備を始める','btn-main'],
+  handover: () => ['受け渡しました','btn-main'],
+  receive: () => ['受け取りました（取引完了）','btn-main'],
+};
+const ACT_DONE = {accept:'同意しました', counter:'条件の変更を提案しました。相手の回答を待ちます', decline:'依頼をお断りしました', cancel:'取りやめました', prepare:'準備中にしました', handover:'受け渡し済みにしました。飲食店の受け取り確認を待ちます', receive:'受け取りを確認しました。取引が完了しました'};
+function prevTerms(d){ const ts = d.history.filter(x => x.terms); return ts.length > 1 ? ts[ts.length - 2].terms : null; }
+function dealCard(d){
+  const [label, kind] = stLabel(d), [title, sub] = nextInfo(d), t = d.terms, mine = needsMe(d);
+  const agreed = LIVE_ST.includes(d.status) || d.status === 'completed', open = OPEN_ST.includes(d.status);
+  const pt = open ? prevTerms(d) : null;
+  const was = (k, f) => pt && pt[k] !== t[k] ? ` class="chg"` : '';
+  const before = (k, f) => pt && pt[k] !== t[k] ? `<span class="cap">（変更前：${h(f(pt))}）</span>` : '';
+  const termsHead = agreed ? '<span class="tag good">✓ 双方が合意した条件</span>'
+    : open ? (d.proposedBy === d.side ? '<span class="tag sun">あなたが出した条件（相手の回答待ち・未合意）</span>' : '<span class="tag hot">相手から届いた条件（未合意）</span>')
+    : '<span class="tag">最後に提示された条件（成立していません）</span>';
+  const notes = [d.note ? `<div class="deal-note"><b>飲食店からのメッセージ</b>\n${h(d.note)}</div>` : '',
+    ...d.history.filter(x => x.note && x.action !== 'request').slice(-1).map(x => `<div class="deal-note"><b>${x.by === 'restaurant' ? '飲食店' : '生産者'}からのメッセージ</b>\n${h(x.note)}</div>`)].join('');
+  const acts = (d.actions || []).map(a => { const [txt, cls] = ACT_LABEL[a](d); return `<button type="button" class="btn ${cls}" data-deal-act="${a}" data-id="${h(d.id)}" ${dealBusy ? 'disabled' : ''}>${txt}</button>`; }).join('');
+  const HIST = {request:'依頼を送信', accept:'同意', counter:'条件の変更を提案', decline:'お断り', cancel:'取りやめ', prepare:'準備を開始', handover:'受け渡し済みにした', receive:'受け取りを確認'};
+  return `<article class="card deal${mine ? ' todo' : ''}" id="deal-${h(d.id)}" style="--t:${tint(d.item)}">
+    <div class="top"><div class="face" aria-hidden="true">${art(d.item)}</div>
+      <div class="grow"><h3>${h(d.item)}${d.variety ? `<small class="muted" style="font-size:12.5px;margin-left:6px">${h(d.variety)}</small>` : ''}</h3>
+        <div class="who">${d.side === 'restaurant' ? '生産者' : '飲食店'}：<b>${h(counterpart(d))}</b></div>
+        <div class="cap">取引 No.${h(d.id.slice(1))}・${h(fmtStamp(d.createdAt))} 依頼${d.grade === '規格外' ? `・規格外（${h(d.reason)}）` : ''}</div></div>
+      <span class="st ${kind}">${label}</span></div>
+    ${progress(d)}
+    <div class="next ${mine ? 'me' : kind === 'ok' || kind === 'done' ? 'ok' : ''}"><b>${h(title)}</b>${sub ? `<span>${h(sub)}</span>` : ''}</div>
+    <div class="terms-h">${termsHead}</div>
+    <dl class="deal-terms">
+      <dt>数量</dt><dd${was('qty')}>${q(t.qty, d.unit)}${before('qty', x => q(x.qty, d.unit))}</dd>
+      <dt>単価</dt><dd${was('price')}>${yen(t.price)}/${h(d.unit)}（税込）${before('price', x => yen(x.price))}</dd>
+      <dt>合計</dt><dd>${yen(Math.round(t.qty * t.price))}</dd>
+      <dt>受け渡し日</dt><dd${was('date') || was('from') || was('to')}>${h(fmtDate(t.date))} ${h(t.from)}〜${h(t.to)}${pt && (pt.date !== t.date || pt.from !== t.from || pt.to !== t.to) ? `<span class="cap">（変更前：${h(fmtDate(pt.date))} ${h(pt.from)}〜${h(pt.to)}）</span>` : ''}</dd>
+      <dt>受け渡し方法</dt><dd${was('place')}>${h(t.place)}で手渡し${before('place', x => placeShort(x.place) + 'で手渡し')}</dd>
+    </dl>
+    ${notes}
+    ${counterId === d.id ? counterForm(d) : acts ? `<div class="acts">${acts}</div>` : ''}
+    ${d.status === 'requested' && d.side === 'producer' && counterId !== d.id ? '<p class="cap">決済・配送はこのアプリでは行いません。受け渡しは合意した日時・場所で、当事者どうしで行います。</p>' : ''}
+    <details class="hist"><summary>やりとりの記録（${d.history.length}件）</summary><ol>${d.history.map(x => `<li>${h(fmtStamp(x.at))}　${x.by === 'restaurant' ? '飲食店' : '生産者'}：${HIST[x.action] || h(x.action)}${x.terms ? `（${q(x.terms.qty, d.unit)}・${yen(x.terms.price)}/${h(d.unit)}・${h(fmtDate(x.terms.date))} ${h(x.terms.from)}〜${h(x.terms.to)}・${h(placeShort(x.terms.place))}）` : ''}</li>`).join('')}</ol></details>
+  </article>`;
+}
+function counterForm(d){
+  const t = d.terms, k = s => `k-${s}-${h(d.id)}`;
+  return `<form class="soft" data-counter-form="${h(d.id)}" novalidate>
+    <b>${d.side === 'producer' ? '変更したい条件を入力してください' : '出し直す条件を入力してください'}</b>
+    <div class="grid">
+      <div class="field"><label for="${k('qty')}">数量（${h(d.unit)}）</label><input id="${k('qty')}" type="number" inputmode="decimal" min="0.1" max="999" step="0.1" value="${t.qty}"></div>
+      <div class="field"><label for="${k('price')}">単価（円/${h(d.unit)}・税込）</label><input id="${k('price')}" type="number" inputmode="numeric" min="1" max="100000" value="${t.price}"></div>
+      <div class="field"><label for="${k('date')}">受け渡し日</label><input id="${k('date')}" type="date" min="${iso(today0())}" value="${h(t.date)}"></div>
+      <div class="field"><label for="${k('place')}">受け渡し場所</label><select id="${k('place')}">${opt(PLACES, t.place)}</select></div>
+      <div class="field"><label for="${k('from')}">時間（から）</label><input id="${k('from')}" type="time" value="${h(t.from)}"></div>
+      <div class="field"><label for="${k('to')}">時間（まで）</label><input id="${k('to')}" type="time" value="${h(t.to)}"></div>
+      <div class="field full"><label for="${k('note')}">メッセージ（任意・200文字まで）</label><textarea id="${k('note')}" maxlength="200" rows="2" placeholder="例：1.5kgなら明日お渡しできます"></textarea></div>
+    </div>
+    <div id="${k('err')}"></div>
+    <button type="submit" class="btn btn-main" ${dealBusy ? 'disabled' : ''}>この条件を提案する</button>
+    <button type="button" class="link" data-counter-close style="align-self:center">やめる</button>
+    <p class="cap">提案すると、相手が同意するまで取引は成立しません。</p>
+  </form>`;
+}
+async function dealAct(id, action, extra){
+  const d = deals.find(x => x.id === id);
+  if(!d || dealBusy) return;
+  dealBusy = true; render();
+  let r = null; try { r = await api('/api/deals', {op:'act', id, v:d.v, action, ...extra}); } catch(e) {}
+  dealBusy = false;
+  if(r && r.data && r.data.deal) deals = deals.map(x => x.id === id ? r.data.deal : x);
+  if(!r || !r.ok){
+    const errs = r && r.data.errors;
+    if(errs && action === 'counter'){ render(); const box = $(`#k-err-${CSS.escape(id)}`); if(box) box.innerHTML = `<ul class="err-list">${errs.map(e => `<li>${h(e)}</li>`).join('')}</ul>`; return; }
+    counterId = null; render();
+    if(r && r.status === 401) return;
+    toast(r ? r.data.error || '操作できませんでした' : '通信できませんでした。もう一度試してください', null, 'err');
+    return;
+  }
+  counterId = null;
+  const now = r.data.deal;
+  // 操作した取引が今の絞り込みから外れても、見失わないように「すべて」に切り替えて表示を続ける
+  if(!DEAL_FILTERS[dealFilter][1](now)) dealFilter = 'all';
+  render();
+  document.getElementById('deal-' + id)?.scrollIntoView({block:'nearest'});
+  toast(action === 'accept' && now.status === 'matched' ? '🎉 取引が成立しました' : ACT_DONE[action], null, 'ok');
+  if(action === 'accept' && now.status === 'matched' && !reduceMotion()) confetti();
+}
+function renderDeals(){
+  const R = me.role === 'restaurant', fs = filtersFor(me.role);
+  if(!fs.includes(dealFilter)) dealFilter = 'all';
+  const list = dealsBy(dealFilter);
+  const empty = !deals.length
+    ? (R ? `<section class="card empty"><div class="big">📨</div><p>まだ仕入れ依頼はありません。</p><p class="cap">仕入れ案を作り、「この案で生産者に仕入れ依頼を送る」を押すと、ここで回答や進み具合を確認できます。</p><button type="button" class="btn btn-main" style="width:auto" data-go="find">仕入れ案を作る →</button></section>`
+       : `<section class="card empty"><div class="big">📨</div><p>まだ仕入れ依頼は届いていません。</p><p class="cap">出品すると、飲食店の仕入れ案に使われ、依頼が届くとここに表示されます。</p><button type="button" class="btn btn-main" style="width:auto" data-go="sell">販売できるものを登録 ＋</button></section>`)
+    : `<section class="card empty"><p class="muted">「${DEAL_FILTERS[dealFilter][0]}」の取引はありません。</p></section>`;
+  $('#app').innerHTML = `${pageHead('取引 🤝', R ? '送った仕入れ依頼への回答、条件の相談、成立後の準備・受け渡しの進み具合を確認できます。' : '飲食店からの仕入れ依頼に回答し、成立後の準備・受け渡しを記録します。')}
+    <div class="deal-filters" role="group" aria-label="取引の絞り込み">${fs.map(f => `<button type="button" class="chip" data-filter="${f}" aria-pressed="${f === dealFilter}">${DEAL_FILTERS[f][0]}（${dealsBy(f).length}）</button>`).join('')}</div>
+    ${!dealsLoaded ? '<p class="cap">読み込み中…</p>' : list.length ? `<div class="lst">${list.map(dealCard).join('')}</div>` : empty}
+    <p class="cap">このアプリは決済・配送・在庫の確保を行いません。受け渡しは、合意した日時・場所で当事者どうしが行います。取引が成立しても、出品の数量は自動では減りません。</p>`;
+}
+
+/* ---------- 仕入れ依頼を送る（仕入れ案から） ---------- */
+const rid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
+const planPick = () => S.plan && (S.plan.result.best || S.plan.result.partial);
+function sendSheet(){
+  const P = S.plan, pick = planPick(); if(!pick) return '';
+  const u = P.req.unit, rows = pick.picks.map(k => byId(k.id) ? {k, l:byId(k.id)} : null).filter(Boolean);
+  const demo = rows.some(x => x.l.demo);
+  return sheetFrame('仕入れ依頼を送る', plainTop('📨 仕入れ依頼を送る'), `
+    <p class="muted">次の${rows.length}軒の生産者に、それぞれ仕入れ依頼を送ります。</p>
+    <ul class="lines">${rows.map(({k, l}) => `<li><span>👨‍🌾 ${h(k.farm)}${l.demo ? '（デモ農家）' : ''}<br><span class="cap">${h(fmtDate(l.date))} ${h(l.from)}〜${h(l.to)}・${h(placeShort(l.place))}</span></span><span>${q(k.amt, u)} × ${yen(l.price)}<br><b>${yen(k.cost)}</b></span></li>`).join('')}</ul>
+    ${P.result.status !== 'ok' ? `<div class="msg warn">希望${q(P.req.qty, u)}に足りない分は含まれていません。いま揃う${q(pick.total, u)}分だけを依頼します。</div>` : ''}
+    <div class="field"><label for="send-note">生産者へのメッセージ（任意・200文字まで）</label><textarea id="send-note" maxlength="200" rows="2" placeholder="例：ランチ用です。午前中の受け取りを希望します"></textarea></div>
+    <div class="msg"><b>依頼を送っただけでは、取引は成立しません。</b><br>生産者が内容を確認して「受ける」と取引成立になります。生産者が数量や日時の変更を提案することもあります。決済・配送はこのアプリでは行いません。</div>
+    ${demo ? '<p class="cap">デモ農家への依頼は、デモを試すためにどの生産者アカウントからも回答できます（店名と依頼内容が表示されます）。</p>' : ''}
+    <button type="button" class="btn btn-main" id="send-req">${rows.length}軒の生産者に仕入れ依頼を送る</button>`);
+}
+async function sendRequests(btn){
+  const P = S.plan, pick = planPick(); if(!pick || btn.disabled) return;
+  P.reqKey = P.reqKey || rid(); save();
+  btn.disabled = true; btn.textContent = '送信しています…';
+  let r = null;
+  try { r = await api('/api/deals', {op:'request', reqKey:P.reqKey, planNo:P.no, note:($('#send-note')?.value || '').trim(), picks:pick.picks.map(k => ({listingId:k.id, qty:k.amt}))}); } catch(e) {}
+  if(!r || !r.ok){ btn.disabled = false; btn.textContent = '送り直す'; if(!r || r.status !== 401) toast(r ? r.data.error || '送れませんでした' : '通信できませんでした。もう一度試してください', null, 'err'); return; }
+  deals = r.data.deals || deals; dealsLoaded = true;
+  const ok = r.data.results.filter(x => x.id), ng = r.data.results.filter(x => x.error);
+  P.sent = ok.length > 0; save();
+  dealFilter = 'open'; go('deals');
+  if(ng.length) toast(`${ok.length}件を送りました。送れなかった依頼：${ng.map(x => x.error).join('／')}`, null, ok.length ? null : 'err');
+  else toast(`📨 ${ok.length}件の仕入れ依頼を送りました。生産者の回答を待ちます`, null, 'ok');
+}
+
+/* ---------- 食材を探す（飲食店）：スワイプで1枚ずつ見るデッキと一覧（デッキは10/16版から移植） ---------- */
+// いいね・スキップは「気になる食材の印」だけで、注文・在庫予約・生産者への連絡ではない。いいねはこの端末にアカウントごとに保存する
+// 受け渡し拠点のおおよその位置（町名からの参考値。正確な建物の住所ではない）
+const PLACE_COORDS = {
+  '拠点P（豊中・共通受渡拠点）': { lat: 34.78, lng: 135.47 },
+  '拠点Q（能勢・道の駅）': { lat: 34.95, lng: 135.47 },
+  '亀岡集荷所': { lat: 35.01, lng: 135.58 },
+};
+// 2点間のおおよその距離（km）。Haversine公式
+function distanceKm(a, b){
+  const R = 6371, toRad = d => d * Math.PI / 180;
+  const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng);
+  const x = Math.sin(dLat/2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng/2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+}
+// browseView：'swipe'（1枚ずつ）／'list'（一覧）。geoStatus：'idle' | 'loading' | 'ok' | 'denied' | 'unsupported'
+let marcheItem = '', marcheRegion = '', marcheIdx = 0, browseView = 'swipe', myCoords = null, geoStatus = 'idle';
+function placeDistText(place){
+  if(!myCoords) return null;
+  const c = PLACE_COORDS[place];
+  if(!c) return null;
+  const km = distanceKm(myCoords, c);
+  return `${placeShort(place)}まで約${km < 10 ? km.toFixed(1) : Math.round(km)}km`;
+}
+// 絞り込み（食材・地域）に合う公開中の出品。現在地を使うときは近い順
+function marcheList(){
+  let list = openListings().filter(l => (!marcheItem || l.item === marcheItem) && (!marcheRegion || (REGION_GROUPS[marcheRegion] || []).includes(l.region)));
+  if(myCoords){
+    const dist = l => PLACE_COORDS[l.place] ? distanceKm(myCoords, PLACE_COORDS[l.place]) : Infinity;
+    list = [...list].sort((a,b) => dist(a) - dist(b));
+  }
+  return list;
+}
+// 背後のカードも同じ構造で描画してCSSで隠す。前面に昇格するときはクラスを外すだけでよく、作り直さずに滑らかに動かせる
+function swipeCard(l, behind){
+  const dist = placeDistText(l.place);
+  return `<article class="swipe-card${behind ? ' behind' : ''}" style="--t:${tint(l.item)}" data-swipe-id="${h(l.id)}"${behind ? ' aria-hidden="true"' : ' tabindex="0" aria-label="' + h(`${l.item} ${l.farm}。Enterキーで詳細`) + '"'}>
+    <div class="img produce">${thumb(l)}<div class="tags">${prodTags(l)}</div>
+      <div class="swipe-stamp like" data-stamp="like">いいね</div><div class="swipe-stamp skip" data-stamp="skip">スキップ</div><span class="peek" aria-hidden="true">タップで詳細</span>
+    </div>
+    <div class="body">
+      <h3>${h(l.item)}${l.variety ? `<small>${h(l.variety)}</small>` : ''}</h3>
+      <div class="grower"><span class="av" aria-hidden="true">${h(String(l.farm).slice(0,1))}</span><span><small>生産者・${h(l.region)}${l.demo ? '・デモ農家' : ''}</small><b>${h(l.farm)}</b></span></div>
+      <dl class="spec">
+        <div><dt>価格</dt><dd><span class="num">¥${l.price.toLocaleString('ja-JP')}</span><small>/${h(l.unit)}</small></dd></div>
+        <div><dt>販売可能量</dt><dd class="${lowStock(l)?'hot':''}"><span class="num">${+(+l.qty).toFixed(1)}</span><small>${h(l.unit)}</small></dd></div>
+        <div><dt>受け渡し</dt><dd>${h(fmtDate(l.date))}</dd></div>
+      </dl>
+      <div class="dist">🧺 ${h(placeShort(l.place))}${dist ? `・${h(dist)}` : ''}</div>
+    </div>
+  </article>`;
+}
+function deckCountHtml(list){
+  return `<div class="deck-count" aria-live="polite"><span>${marcheIdx + 1} / ${list.length}</span><span class="deck-bar" aria-hidden="true"><i style="width:${Math.round((marcheIdx + 1) / list.length * 100)}%"></i></span></div>`;
+}
+function deckHtml(){
+  const list = marcheList();
+  if(!list.length) return `<div class="deck-empty"><div class="big" aria-hidden="true">🧺</div><p class="cap">条件に合う出品が見つかりません。絞り込みを変えてみてください。</p></div>`;
+  if(marcheIdx >= list.length) return `<div class="deck-empty"><div class="big" aria-hidden="true">🎉</div><p>ここまでの食材をすべて確認しました。</p><button type="button" class="btn btn-sub" id="mk-restart">もう一度最初から見る</button></div>`;
+  const l = list[marcheIdx], next = list[marcheIdx + 1];
+  return `<div class="deck-wrap">
+    ${deckCountHtml(list)}
+    <div class="deck" id="mk-deck">${next ? swipeCard(next, true) : ''}${swipeCard(l, false)}</div>
+    <div class="swipe-actions">
+      <div class="act-wrap"><button type="button" id="mk-skip" aria-label="スキップ" class="skip-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></button><span class="lbl" aria-hidden="true">スキップ</span></div>
+      <div class="act-wrap"><button type="button" id="mk-like" aria-label="いいね" class="like-btn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.3s-7.6-4.6-7.6-10.4A4.3 4.3 0 0 1 12 7.1a4.3 4.3 0 0 1 7.6 2.8c0 5.8-7.6 10.4-7.6 10.4z"/></svg></button><span class="lbl" aria-hidden="true">いいね</span></div>
+    </div>
+    <p class="cap" style="text-align:center">左右にスワイプ、またはボタンで選べます。カードをタップすると詳細が見られます。</p>
+  </div>`;
+}
+// いいね・スキップの確定。dir があるときだけカードが飛んでいく見た目をつける（シートから進めるときはアニメーションなし）
+function advanceDeck(dir){
+  const deck = $('#mk-deck');
+  const front = deck && deck.querySelector('.swipe-card:not(.behind)');
+  const behind = deck && deck.querySelector('.swipe-card.behind');
+  const commit = () => {
+    marcheIdx++;
+    if(front) front.remove();
+    if(behind){
+      behind.classList.remove('behind', 'lift');
+      behind.removeAttribute('aria-hidden');
+      behind.setAttribute('tabindex', '0');
+      behind.style.pointerEvents = '';
+      const list = marcheList(), nx = list[marcheIdx + 1];
+      if(nx) deck.insertAdjacentHTML('afterbegin', swipeCard(nx, true));
+      const cnt = $('.deck-count'); if(cnt) cnt.outerHTML = deckCountHtml(list);
+      bindDeck();
+    } else {
+      const o = $('#mk-out'); if(o){ o.innerHTML = deckHtml(); bindDeck(); }
+    }
+    const lk = $('#liked-sec'); if(lk) lk.outerHTML = likedSectionHtml();
+  };
+  if(dir && front && !reduceMotion()){
+    front.style.transform = `translateX(${dir*600}px) rotate(${dir*22}deg)`;
+    front.style.opacity = '0';
+    setTimeout(commit, 260);
+  } else commit();
+}
+function likeCurrent(animate){
+  const l = marcheList()[marcheIdx];
+  if(l && !S.liked.includes(l.id)) S.liked.push(l.id);
+  save();
+  advanceDeck(animate ? 1 : 0);
+}
+function skipCurrent(animate){ advanceDeck(animate ? -1 : 0); }
+function openListingSheet(id){ if(!id || !byId(id)) return; sheetMode = 'listing'; sheetId = id; renderSheet(); }
+function listingSheet(){
+  const l = byId(sheetId);
+  if(!l) return '';
+  const liked = S.liked.includes(l.id), dist = placeDistText(l.place);
+  const inDeck = marcheList()[marcheIdx]?.id === l.id;
+  return sheetFrame('食材の詳細', plainTop(`${art(l.item)} ${h(l.item)}`), `
+    ${previewCard(l)}
+    <dl class="kv">
+      <dt>受け渡し</dt><dd>${h(fmtDate(l.date))} ${h(l.from)}〜${h(l.to)}・${h(l.place)}${dist ? `（${h(dist)}）` : ''}</dd>
+      <dt>販売単位</dt><dd>最低${q(l.minQty,l.unit)}・${q(l.step,l.unit)}刻み</dd>
+      <dt>更新</dt><dd class="cap" style="margin:0">${h(updText(l).replace(/^情報の更新：/, ''))}</dd>
+    </dl>
+    ${inDeck ? `<div class="row">
+      <button type="button" class="btn grow" id="sheet-skip">スキップ</button>
+      <button type="button" class="btn grow${liked ? '' : ' btn-main'}" id="sheet-like"${liked ? ' disabled' : ''}>${liked ? '♥ いいね済み' : '♥ いいね'}</button>
+    </div>` : ''}
+    <button type="button" class="btn btn-sub" data-browse-build="${h(l.id)}">この食材で仕入れ案を作る →</button>
+    <p class="cap">いいねは気になる食材の印です。注文・在庫予約ではなく、生産者には通知されません。</p>`);
+}
+// カードのドラッグ操作。縦スクロールは妨げず（touch-action:pan-y）、横方向だけ追従させる
+function bindDeck(){
+  const card = document.querySelector('#mk-deck .swipe-card:not(.behind)');
+  if(!card) return;
+  const likeStamp = card.querySelector('[data-stamp="like"]');
+  const skipStamp = card.querySelector('[data-stamp="skip"]');
+  const THRESHOLD = 100;
+  let dragging = false, moved = false, startX = 0, startY = 0, dx = 0;
+  card.addEventListener('pointerdown', (e) => {
+    dragging = true; moved = false; startX = e.clientX; startY = e.clientY; dx = 0;
+    card.style.transition = 'none';
+    card.classList.add('lift');
+    try { card.setPointerCapture(e.pointerId); } catch(err) {}
+  });
+  card.addEventListener('pointermove', (e) => {
+    if(!dragging) return;
+    dx = e.clientX - startX;
+    if(Math.abs(dx) > 6 || Math.abs(e.clientY - startY) > 6) moved = true;
+    card.style.transform = `translateX(${dx}px) rotate(${dx/18}deg)`;
+    if(likeStamp) likeStamp.style.opacity = String(Math.max(0, Math.min(1, dx / THRESHOLD)));
+    if(skipStamp) skipStamp.style.opacity = String(Math.max(0, Math.min(1, -dx / THRESHOLD)));
+  });
+  const onUp = () => {
+    if(!dragging) return;
+    dragging = false;
+    card.style.transition = '';
+    card.classList.remove('lift');
+    if(dx > THRESHOLD) likeCurrent(true);
+    else if(dx < -THRESHOLD) skipCurrent(true);
+    else {
+      card.style.transform = '';
+      if(likeStamp) likeStamp.style.opacity = '0';
+      if(skipStamp) skipStamp.style.opacity = '0';
+      if(!moved) openListingSheet(card.dataset.swipeId);
+    }
+  };
+  card.addEventListener('pointerup', onUp);
+  card.addEventListener('pointercancel', onUp);
+}
+function geoButtonHtml(){
+  if(geoStatus === 'ok') return `<p class="cap">📍 現在地から近い順に並べています（拠点までのおおよその距離です）</p>`;
+  if(geoStatus === 'denied') return `<p class="cap">現在地を使えなかったため、通常の順番で表示しています。</p>`;
+  if(geoStatus === 'unsupported') return '';
+  return `<button type="button" class="link" id="mk-geo">📍 現在地から近い順に並べる</button>`;
+}
+function likedSectionHtml(){
+  const liked = S.liked.map(byId).filter(Boolean);
+  return `<section class="sec" id="liked-sec">
+    <div class="sec-h"><h2 class="sec-title">❤️ いいねした食材</h2>${liked.length ? `<span class="cap">${liked.length}件</span>` : ''}</div>
+    ${liked.length
+      ? `<div class="hscroll">${liked.map(l => `<div class="mcell">${previewCard(l)}<button type="button" class="btn small btn-sub" data-browse-build="${h(l.id)}">この食材で仕入れ案を作る</button><button type="button" class="btn small" data-unlike="${h(l.id)}">いいねを外す</button></div>`).join('')}</div>`
+      : `<p class="cap">まだありません。カードを右にスワイプ（またはハートのボタン）すると、ここに残ります。</p>`}
+  </section>`;
+}
+function renderBrowse(){
+  const open = openListings(), items = [...new Set(open.map(l => l.item))];
+  const sorted = [...open].sort((a, b) => a.item.localeCompare(b.item, 'ja') || a.price - b.price);
+  const head = `${pageHead('食材を探す 🔍', 'いま公開中の出品から、使ってみたい食材にいいね。カードから仕入れ案を作れます。表示中の在庫は確保されていません。')}
+    <div class="seg" role="group" aria-label="表示の切り替え">
+      <button type="button" data-browse-view="swipe" aria-pressed="${browseView === 'swipe'}">スワイプで探す</button>
+      <button type="button" data-browse-view="list" aria-pressed="${browseView === 'list'}">一覧で見る</button>
+    </div>`;
+  const swipe = `<section class="sec">
+      <div class="filters">
+        <select id="mk-item" aria-label="食材で絞り込む" class="${marcheItem ? 'on' : ''}">${opt(items, marcheItem, '食材：すべて')}</select>
+        <select id="mk-region" aria-label="地域で絞り込む" class="${marcheRegion ? 'on' : ''}">${opt(Object.keys(REGION_GROUPS), marcheRegion, '地域：すべて')}</select>
+      </div>
+      <div id="mk-geo-wrap">${geoButtonHtml()}</div>
+      <div id="mk-out">${deckHtml()}</div>
+    </section>`;
+  const list = sorted.length ? [...new Set(sorted.map(l => l.item))].map(it => `<section class="sec"><h2 class="group-h"><span aria-hidden="true">${art(it)}</span>${h(it)}<span class="cap">${sorted.filter(l => l.item === it).length}件</span></h2>
+      <div class="mgrid">${sorted.filter(l => l.item === it).map(l => `<div class="mcell">${previewCard(l)}<button type="button" class="btn small btn-sub" data-browse-build="${h(l.id)}">この食材で仕入れ案を作る</button></div>`).join('')}</div></section>`).join('')
+    : '<section class="card empty"><div class="big">🧺</div><p>いま公開中の出品はありません。</p></section>';
+  $('#app').innerHTML = `${head}${browseView === 'swipe' ? swipe : list}${likedSectionHtml()}`;
+  bindDeck();
+}
+
+/* ---------- home ---------- */
+const tile = (emo, t, s, attr, n) => `<button type="button" class="tile" ${attr}><span class="emo" aria-hidden="true">${emo}</span><span class="t">${t}</span><span class="s">${s}</span>${n ? `<span class="cnt badge">${n}</span>` : ''}</button>`;
+const nOf = f => dealsBy(f).length;
+function renderHome(){
+  if(S.plan) refreshPlan();
+  const R = me.role === 'restaurant', open = openListings(), todo = dealsBy('todo');
+  const greet = firstVisit ? 'はじめまして 👋' : 'おかえりなさい ☺️';
+  const chip = `<p class="role-chip">${R ? '🍽️' : '🌾'} ${h(R ? me.name : me.farm)}（${ROLE_LABEL[me.role]}）</p>`;
+  const hello = `<section class="hello">
+      <div class="txt">${chip}<p class="cap" style="color:var(--ink-2)">${greet}</p>
+        ${R ? '<h1><span class="nw">今日も、</span><span class="nw">関西のおいしいを</span><span class="nw">見つけよう。</span></h1><p class="lead">欲しい食材を書くと、複数の農家さんの在庫から仕入れ案を作り、そのまま仕入れ依頼を送れます。</p>'
+          : '<h1><span class="nw">育てた食材を、</span><span class="nw">近くのお店の</span><span class="nw">仕入れへ。</span></h1><p class="lead">販売できる量を登録すると、飲食店の仕入れ案に使われ、仕入れ依頼が届きます。</p>'}</div>
+      ${HELLO_ART}
+      <ol class="flow" aria-label="取引の流れ">${(R ? [['💬','希望を<br>入力'],[server.aiReady ? '✨' : '📝', server.aiReady ? 'AIが条件を<br>整理' : '条件を<br>確認'],['📨','生産者に<br>依頼'],['🤝','合意して<br>成立']]
+          : [['🌾','販売できる<br>ものを登録'],['📨','依頼が<br>届く'],['💬','回答・<br>条件の相談'],['🤝','合意して<br>成立']]).map(([e, t]) => `<li><span class="dot" aria-hidden="true">${e}</span>${t}</li>`).join('')}</ol>
+    </section>`;
+  // 次にやること：自分の操作が必要な取引があれば、いちばん目立つ位置に出す
+  const nextUp = todo.length ? (() => { const d = todo[0], [title] = nextInfo(d);
+    return `<section class="next-up" aria-label="次にやること"><span class="k">次にやること${todo.length > 1 ? `（ほか${todo.length - 1}件）` : ''}</span>
+      <h2>${h(title)}</h2><p class="muted">${art(d.item)} ${h(d.item)} ${q(d.terms.qty, d.unit)}・${d.side === 'restaurant' ? '生産者' : '飲食店'}：${h(counterpart(d))}</p>
+      <button type="button" class="btn btn-main" data-deals="todo">${todo.length > 1 ? '対応が必要な取引を見る' : 'この取引を確認する'} →</button></section>`; })() : '';
+  const cta = R ? `<button type="button" class="btn ${todo.length ? '' : 'btn-main'}" data-go="find">🍽️ 仕入れ案を作る →</button>`
+    : `<button type="button" class="btn ${todo.length ? '' : 'btn-main'}" data-go="sell">🌾 販売できるものを登録 ＋</button>`;
+  const ctaNote = todo.length ? '' : `<p class="cap" style="margin-top:-6px">${R ? (deals.length ? '新しい仕入れが必要になったら、ここから始めます。' : 'まずは欲しい食材を書いて、仕入れ案を作りましょう。') : (S.listings.some(l => l.mine) ? '新しく販売できるものができたら、ここから登録します。' : 'まずは販売できるものを登録しましょう。5つのステップで登録できます。')}</p>`;
+
+  const resumeShop = R && shopResumable(), resumeFarm = !R && Boolean(S.fdraft);
+  const resume = (resumeShop || resumeFarm) ? `<section class="mini-list" aria-label="入力の続き">
+      <p class="cap">入力の続きから再開できます。</p>
+      ${resumeShop ? `<div class="mini"><div><div class="t">✏️ 仕入れの希望を入力中</div><div class="s">${h(S.draft.text || '項目を選んで入力中')}</div></div><div class="row"><button type="button" class="btn small btn-sub" data-resume="shop">続きから</button><button type="button" class="link" data-restart="shop">最初から</button></div></div>` : ''}
+      ${resumeFarm ? `<div class="mini"><div><div class="t">✏️ 出品を登録中（${S.fdraft.step}/5）</div><div class="s">${h(S.fdraft.d.item || '入力中')}</div></div><div class="row"><button type="button" class="btn small btn-sub" data-resume="farm">続きから</button><button type="button" class="link" data-restart="farm">最初から</button></div></div>` : ''}
+    </section>` : '';
+
+  const mine = S.listings.filter(l => l.mine), cnt = (n, unit = '件') => n ? `${n}${unit}` : 'まだありません';
+  const tiles = R ? [
+      tile('🔍', '食材を探す', `公開中 ${open.length}件${S.liked.length ? `・いいね ${S.liked.length}件` : '・スワイプで探せます'}`, 'data-tab="browse"'),
+      tile('📨', '送信した仕入れ依頼を確認する', cnt(deals.length), 'data-deals="open"'),
+      tile('💬', '生産者からの回答を確認する', cnt(nOf('answered')), 'data-deals="answered"', deals.filter(d => d.status === 'countered').length),
+      tile('🤝', '成立した取引を確認する', cnt(nOf('live')), 'data-deals="live"', deals.filter(d => d.status === 'handed').length),
+      tile('🗂️', '取引履歴を確認する', cnt(nOf('history')), 'data-deals="history"'),
+      tile('📖', '保存した仕入れ案', cnt(S.saved.length), 'data-tab="records"'),
+    ] : [
+      tile('🧺', '登録済みの食材を確認する', cnt(mine.length), 'data-tab="farm"'),
+      tile('✏️', '出品内容を編集する', '数量・出荷日・公開状態も変更できます', 'data-tab="farm"'),
+      tile('📨', '飲食店からの仕入れ依頼を確認する', cnt(nOf('open')), 'data-deals="open"'),
+      tile('💬', '依頼に回答する', cnt(deals.filter(d => d.status === 'requested').length), 'data-deals="todo"', deals.filter(d => d.status === 'requested').length),
+      tile('🤝', '成立した取引を確認する', cnt(nOf('live')), 'data-deals="live"', deals.filter(d => ['matched','preparing'].includes(d.status)).length),
+      tile('🗂️', '取引履歴を確認する', cnt(nOf('history')), 'data-deals="history"'),
+    ];
+
+  let extra = '';
+  if(R){
+    const recent = [];
+    if(S.plan){
+      const P = S.plan, ok = P.result.status === 'ok';
+      recent.push(`<button type="button" class="mini clickable" data-open-plan><div><div class="t">${h(summarize(P.result, P.req))}</div><div class="s">いまの仕入れ案 No.${h(P.no)}${P.sent ? '・依頼を送信済み' : '・まだ依頼していません'}</div></div><span class="tag ${ok?'good':'hot'}">${ok?'成立する案':'不足'}</span></button>`);
+    }
+    extra = recent.length ? `<section class="sec"><h2 class="sec-title">いまの仕入れ案</h2><div class="mini-list">${recent.join('')}</div></section>` : '';
+  }
+  $('#app').innerHTML = `${hello}${nextUp}<section class="sec">${cta}${ctaNote}</section>${resume}
+    <section class="sec"><h2 class="sec-title">できること</h2><div class="tiles">${tiles.join('')}</div></section>
+    ${extra}
+    <p class="cap">デモ農家（A農家など）の出品・価格は架空のデモデータです。このアプリは仕入れ依頼と条件の合意、取引の進み具合の記録までを扱い、決済・配送・在庫の確保は行いません。</p>`;
+}
+
+/* ---------- restaurant ---------- */
+function stepsBar(names, i){
+  return `<ol class="steps">${names.map((n,k)=>`<li class="${k===i?'on':k<i?'done':''}"><span class="n">${k<i?'✓':k+1}</span>${n}</li>`).join('')}</ol>`;
+}
+function renderShop(){
+  if(S.step === 'result' && S.plan) refreshPlan();
+  const app = $('#app'), names = ['希望を入力','条件を確認','仕入れ案'];
+  if(S.step === 'confirm' && S.draft.req) app.innerHTML = stepsBar(names,1) + confirmView();
+  else if(S.step === 'result' && S.plan) app.innerHTML = stepsBar(names,2) + resultView();
+  else { S.step = 'input'; app.innerHTML = inputView(); }
+}
+function inputView(){
+  const ex = ['明後日までに大阪近郊のトマトを10kg、多少形が悪くてもOK','明日、北摂でなすを6kg。規格外は不可','明日までに万願寺とうがらしを2.5kg、1kg 1300円まで'];
+  return `${pageHead('今日は何を仕入れる？ 🔍', '欲しい食材を書くと、農家さんたちの在庫を組み合わせて仕入れ案を作ります。')}
+  <section class="search">
+    <label class="search-box" for="req-text"><span class="emo" aria-hidden="true">💬</span><textarea id="req-text" rows="2" maxlength="200" placeholder="例：明後日までに大阪近郊のトマトを10kg、多少形が悪くてもOK">${h(S.draft.text)}</textarea></label>
+    <div class="chip-row" aria-label="入力例">${ex.map(e=>`<button type="button" class="chip ex" data-ex="${h(e)}">💬 ${h(e)}</button>`).join('')}</div>
+    ${S.draft.note ? `<div class="msg ${S.draft.noteKind||'warn'}">${S.draft.note}</div>` : ''}
+    <button type="button" class="btn btn-main" id="parse" ${busy?'disabled':''}>${busy?'AIが条件を整理しています…':(server.aiReady ? 'AIで条件を整理する →' : 'この文章から条件を整理する →')}</button>
+    <button type="button" class="link" id="manual" style="align-self:center">AIを使わずに項目を選んで入力する</button>
+  </section>
+  ${server.aiReady ? '' : `<div>${aiStatus()}</div>`}`;
+}
+function confirmView(){
+  const r = S.draft.req, miss = k => (r[k] == null || r[k] === '') ? ' miss' : '';
+  return `${pageHead('この条件でいいですか？ 📝', '違うところだけ直してください。書かれていない条件は「指定なし」です。')}
+  <section class="card">
+    ${S.draft.text ? `<p class="quote">💬 「${h(S.draft.text)}」</p>` : ''}
+    ${S.draft.note ? `<div class="msg ${S.draft.noteKind||'info'}">${S.draft.note}</div>` : ''}
+    <div class="grid">
+      <div class="field${miss('item')}"><label for="c-item">品目</label><select id="c-item">${opt(ITEMS, r.item, '選んでください')}</select></div>
+      <div class="field${miss('qty')}"><label for="c-qty">数量</label><div class="pair"><input id="c-qty" type="number" inputmode="decimal" min="0.1" max="200" step="0.1" value="${r.qty ?? ''}"><select id="c-unit" aria-label="単位">${opt(UNITS, r.unit)}</select></div></div>
+      <div class="field${miss('deadline')}"><label for="c-date">希望日</label><input id="c-date" type="date" min="${iso(today0())}" value="${r.deadline ?? ''}"></div>
+      <div class="field"><label for="c-mode">受け渡し</label><select id="c-mode"><option value="by"${r.dateMode==='by'?' selected':''}>希望日までに</option><option value="on"${r.dateMode==='on'?' selected':''}>希望日ちょうど</option></select></div>
+    </div>
+    <details><summary>こだわり条件（地域・価格・規格外・場所）</summary>
+      <div class="grid" style="margin-top:14px">
+        <div class="field"><label for="c-region">地域</label><select id="c-region">${opt(Object.keys(REGION_GROUPS), r.region, '指定なし')}</select></div>
+        <div class="field"><label for="c-price">単価の上限（税込・1${h(r.unit||'kg')}）</label><input id="c-price" type="number" inputmode="numeric" min="1" placeholder="指定なし" value="${r.maxPrice ?? ''}"></div>
+        <div class="field"><label for="c-off">形の不揃いなど規格外</label><select id="c-off"><option value="0"${!r.allowOff?' selected':''}>含めない${r.allowOffStated?'':'（指定なし）'}</option><option value="1"${r.allowOff?' selected':''}>含めてよい</option></select></div>
+        <div class="field"><label for="c-place">受渡場所</label><select id="c-place">${opt(PLACES, r.place, '指定なし')}</select></div>
+      </div>
+    </details>
+    <div id="c-err"></div>
+    <button type="button" class="btn btn-main" id="build">仕入れ案を作る →</button>
+    <button type="button" class="link" id="back-input" style="align-self:center">文章を直す</button>
+  </section>`;
+}
+function readConfirm(){
+  const r = {
+    item: $('#c-item').value || null, qty: +$('#c-qty').value || null, unit: $('#c-unit').value,
+    deadline: $('#c-date').value || null, dateMode: $('#c-mode').value, region: $('#c-region').value,
+    maxPrice: +$('#c-price').value || null, allowOff: $('#c-off').value === '1',
+    allowOffStated: S.draft.req.allowOffStated || $('#c-off').value === '1', place: $('#c-place').value
+  };
+  const err = [];
+  if(!r.item) err.push('品目を選んでください');
+  if(!r.qty || r.qty <= 0 || r.qty > 200) err.push('数量は0.1〜200の範囲で入力してください');
+  if(!r.deadline || !isISO(r.deadline) || r.deadline < iso(today0())) err.push('希望日を今日以降で選んでください');
+  return {r, err};
+}
+
+/* ---------- restaurant: plan ---------- */
+function slotLabel(key){ const [d,t,p] = key.split('|'); return {date:fmtDate(d), time:t.replace('-','〜'), place:p}; }
+function reqChips(r){
+  return [r.item, q(r.qty,r.unit), `${fmtDate(r.deadline)}${r.dateMode==='by'?'まで':''}`, r.region||'地域指定なし', r.allowOff?'規格外可':'規格外を含めない', r.maxPrice!=null?`${yen(r.maxPrice)}/${r.unit}まで`:null, r.place||null]
+    .filter(Boolean).map(h).join('・');
+}
+// 候補ごとの「確認が必要な点」。登録データから言えることだけを書く
+function planChecks(l, k){
+  const out = [];
+  if(!l.id) return out;
+  if(l.grade === '規格外') out.push(`規格外（${l.reason}）を含みます。料理の用途に合うか確認してください`);
+  if(l.surplus) out.push('余剰品として登録された供給です');
+  if(k.amt < l.qty) out.push(`登録数量${q(l.qty,l.unit)}のうち${q(k.amt,l.unit)}を使う案です`);
+  out.push('在庫は確保されていません。依頼を送ると、生産者が数量・価格・受け渡しを確認して回答します');
+  return out;
+}
+function slipCards(p, unit){
+  return p.picks.map(k => { const l = byId(k.id) || {}, checks = planChecks(l, k);
+    return `<div class="fc"><div class="face" aria-hidden="true">👨‍🌾</div><div class="who">${h(k.farm)}<span>📍${h(l.region||'')}${l.variety?'・'+h(l.variety):''}</span></div>
+      <div class="meta"><span>¥${(l.price||0).toLocaleString('ja-JP')}/${h(unit)}</span>${l.grade==='規格外'?`<span class="tag">規格外・${h(l.reason)}</span>`:''}${l.surplus?'<span class="tag">余剰</span>':''}</div>
+      <div class="amt"><div><b>${+k.amt.toFixed(1)}</b><small>${h(unit)}</small></div><div class="yen">${yen(k.cost)}</div></div>
+      ${checks.length ? `<div class="checks" style="grid-column:1/-1;margin-top:6px"><div class="t">確認が必要な点</div><ul>${checks.map(c => `<li>${h(c)}</li>`).join('')}</ul></div>` : ''}</div>`; }).join('');
+}
+function summarize(res, r){
+  if(res.status === 'ok') return `${res.best.picks.map(p=>`${p.farm}${q(p.amt,r.unit)}`).join('＋')}＝${q(r.qty,r.unit)}・${yen(res.best.cost)}`;
+  return res.partial ? `${r.item} 最大${q(res.partial.total,r.unit)}（${q(r.qty-res.partial.total,r.unit)}不足）` : `${r.item} 条件の合う出品なし`;
+}
+// 在庫が変わったら古い案を使えない状態にして、残りの在庫を含めて計算し直す
+function refreshPlan(){
+  const P = S.plan, now = snapshot(P.req.item), ch = diffSnap(P.snap, now);
+  if(!ch.length) return;
+  const old = summarize(P.result, P.req), oldNo = P.no;
+  S.planSeq++;
+  S.plan = {req:P.req, result:allocate(P.req), snap:now, no:planNo(), prev:{summary:old, changes:ch, no:oldNo}};
+  save();
+}
+function planNo(){ const d = today0(); return `${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(S.planSeq)}`; }
+function resultView(){
+  const {req:r, result:res, prev} = S.plan, u = r.unit;
+  const short = res.partial ? +(r.qty - res.partial.total).toFixed(1) : r.qty;
+  let banner = '';
+  if(prev){
+    const tail = res.status === 'ok' ? `現在も${q(r.qty,u)}で成立します。組み合わせを更新しました。` : res.partial ? `現在の合計は${q(res.partial.total,u)}で${q(short,u)}不足です。` : '現在、条件の合う出品はありません。';
+    banner = `<div class="msg err"><b>在庫が変わったため、案 No.${h(prev.no)} は使えません。</b><br>${h(prev.changes.join('。'))}。${h(tail)}</div>
+      <div class="slip void"><div class="foot void-body"><span class="slip-no">旧案 No.${h(prev.no)}</span><span>${h(prev.summary)}</span></div></div>`;
+  }
+  let verdict, body = '';
+  if(res.status === 'ok'){
+    const s = slotLabel(res.best.slot);
+    verdict = `🎉 条件を満たす${q(r.qty,u)}の仕入れ案が見つかりました`;
+    body = `<dl class="sum">
+        <div><dt>数量</dt><dd><span class="bigv">${+r.qty}<small>${h(u)}</small></span><span class="sub">希望どおり・${res.best.n}軒の組み合わせ</span></dd></div>
+        <div><dt>受け渡し</dt><dd><b>${h(s.date)}</b> ${h(s.time)}<span class="sub">${h(s.place)}</span></dd></div>
+        <div><dt>費用</dt><dd><span class="bigv">${res.best.cost.toLocaleString('ja-JP')}<small>円</small></span><span class="sub">税込・受渡手数料0円（デモ条件）</span></dd></div>
+      </dl>
+      <div class="slip-sec">つながる生産者さん</div>
+      <div>${slipCards(res.best,u)}</div>
+      <div class="total"><span>合計</span><span>${q(r.qty,u)}　${yen(res.best.cost)}</span></div>`;
+  } else {
+    verdict = {
+      none: `条件に合う${r.item}の出品がありません`,
+      short: `希望${q(r.qty,u)}に対し、条件の合う登録数量は${q(res.partial?.total||0,u)}。${q(short,u)}不足`,
+      slot: '数量はありますが、同じ日時・場所で受け取れる組み合わせがありません',
+      step: `最低販売量・販売刻みの都合で、ちょうど${q(r.qty,u)}にできません`
+    }[res.status];
+    if(res.partial){
+      const s = slotLabel(res.partial.slot);
+      body = `<dl class="sum">
+          <div><dt>数量</dt><dd><span class="bigv">${+res.partial.total.toFixed(1)}<small>${h(u)}まで</small></span><span class="sub">希望${q(r.qty,u)}に${q(short,u)}足りません</span></dd></div>
+          <div><dt>受け渡し</dt><dd><b>${h(s.date)}</b> ${h(s.time)}<span class="sub">${h(s.place)}</span></dd></div>
+          <div><dt>費用</dt><dd><b>${yen(res.partial.cost)}</b><span class="sub">${q(res.partial.total,u)}分の参考額</span></dd></div>
+        </dl>
+        <div class="slip-sec">参考：いま揃う最大量の内訳（成立していません）</div>
+        <div>${slipCards(res.partial,u)}</div>`;
+    }
+  }
+  const ex = res.excluded.length ? `<details><summary>この案で使わなかった出品（${res.excluded.length}件）</summary><ul class="ex">${res.excluded.map(e=>{const l=byId(e.id);return `<li><b>${h(l.farm)} ${h(l.item)} ${q(l.qty,l.unit)}</b><span>${h(e.reasons.join('・'))}</span></li>`;}).join('')}</ul></details>` : '';
+  let sg = '';
+  if(res.status !== 'ok'){
+    const list = suggest(r);
+    if(res.partial) list.push({label:`数量を${q(res.partial.total,u)}にする`, patch:{qty:res.partial.total}, detail:'いま揃う量で案を作ります'});
+    sg = `<section class="card"><h2 class="sec-title">条件を変えると… 💡</h2><p class="muted" style="font-size:14px">数量を勝手に丸めたり、別の品種に置き換えたりはしません。変える条件を選んでください。</p>
+      <div class="sugg">${list.map((s,i)=>`<div class="s"><div>${h(s.label)}<span>${h(s.detail)}</span></div><button type="button" class="btn small btn-sub" data-sugg="${i}">この条件で再計算</button></div>`).join('') || '<p class="muted">条件をゆるめても成立する組み合わせは見つかりませんでした。</p>'}</div></section>`;
+    S._sugg = list;
+  }
+  const saved = S.saved.some(s => s.no === S.plan.no);
+  const pick = res.best || res.partial;
+  return `${banner}
+  <div class="cond"><span>条件：<b>${reqChips(r)}</b></span><button type="button" class="link" id="edit-cond-top" style="white-space:nowrap">変える</button></div>
+  <article class="slip">
+    <div class="slip-head ${res.status==='ok'?'ok':'bad'}"><div><div class="slip-no">仕入れ案 No.${h(S.plan.no)}</div><div class="verdict">${h(verdict)}</div></div>
+      <div class="stamp" aria-label="状態：農家承認前・在庫未確保"><b>未確保</b><small>農家承認前</small></div></div>
+    ${body}
+    <div class="foot"><span>この案は注文・在庫予約ではありません。同じ在庫が他店の案に入ることがあります。</span><span>依頼を送り、生産者と条件に合意すると取引成立です。決済・配送は対象外です。</span></div>
+  </article>
+  ${sg}
+  ${pick ? (S.plan.sent ? '<button type="button" class="btn btn-sub" data-deals="open">📨 仕入れ依頼を送信済み → 取引で回答を確認する</button>'
+    : `<button type="button" class="btn btn-main" id="send-plan">📨 この案で生産者に仕入れ依頼を送る →</button><p class="cap" style="margin-top:-6px;text-align:center">送っただけでは成立しません。生産者が受けると取引成立になります。</p>`) : ''}
+  <button type="button" class="btn" id="save-plan" ${saved?'disabled':''}>${saved?'📖 記録に保存済み':'📖 この案を記録に保存する（依頼は送りません）'}</button>
+  ${pick ? `<button type="button" class="ask-cta" id="plan-menu" style="background:var(--yellow-soft)"><span style="font-size:30px;width:44px;text-align:center" aria-hidden="true">🍳</span><span><b>この案の食材で限定メニュー案を考える</b><span>規格外・余剰の食材も生かせる料理例と、原価の目安を出します</span></span></button>` : ''}
+  ${ex ? `<section class="card">${ex}</section>` : ''}
+  <div class="row"><button type="button" class="btn grow" id="edit-cond">条件を変える</button><button type="button" class="btn grow" id="new-req">新しく作る</button></div>`;
+}
+function buildPlan(r){
+  S.planSeq++;
+  S.plan = {req:r, result:allocate(r), snap:snapshot(r.item), no:planNo(), prev:null};
+  S.tab = 'shop'; S.step = 'result'; animate = true; save(); render(); window.scrollTo(0,0);
+}
+const OUT_MSG = {
+  personal: 'このデモは地域の生産者と飲食店の仕入れ案づくりが対象です。家庭用・個人のご購入には対応していません。',
+  nationwide: 'このデモは地域の生産者と飲食店の仕入れ案づくりが対象です。全国への配送・発送には対応していません。',
+  multi: '1回の依頼で扱える品目は1つです。最初の品目で条件を整理しました。ほかの品目は、この案のあとに別の依頼として入力してください。'
+};
+async function doParse(){
+  const text = $('#req-text').value.trim();
+  S.draft.text = text;
+  if(!text){ S.draft.note = '品目・数量・希望日を入力してください。上の例を選ぶか、「項目を選んで入力する」から続けられます。'; S.draft.noteKind='warn'; save(); render(); return; }
+  if(text.length > 200){ S.draft.note = '200文字以内で入力してください。'; S.draft.noteKind='warn'; save(); render(); return; }
+  busy = true; S.draft.note = ''; render();
+  let parsed = null, note = '', kind = 'ok';
+  let r = null;
+  if(server.aiReady){ try { r = await api('/api/parse', {text}); } catch(e) {} }
+  if(r && r.ok && r.data.parsed){ parsed = clean(r.data.parsed); note = '✨ AIが条件を整理しました。違うところは直してください。'; }
+  if(!parsed){
+    parsed = clean(ruleParse(text)); kind = 'warn';
+    note = !server.aiReady ? '🔌 AIが未設定のため、簡易読み取りで項目を埋めました。項目を選んで続けられます。'
+      : r && r.status === 429 ? 'AIの読み取りが短時間に集中したため、簡易読み取りで項目を埋めました。項目を選んで続けられます。'
+      : 'AIに接続できなかったため、簡易読み取りで項目を埋めました。項目を選んで続けられます。';
+  }
+  busy = false;
+  if(parsed.unreadable && !parsed.item && !parsed.qty){
+    S.draft.note = '<b>条件を読み取れません。</b>品目・数量・希望日を含めて書き直すか、「項目を選んで入力する」から続けてください。'; S.draft.noteKind = 'err'; save(); render(); return;
+  }
+  if(parsed.outOfScope === 'personal' || parsed.outOfScope === 'nationwide'){
+    S.draft.note = h(OUT_MSG[parsed.outOfScope]); S.draft.noteKind = 'warn'; save(); render(); return;
+  }
+  if(parsed.outOfScope === 'multi'){ note = OUT_MSG.multi + '<br>' + note; kind = 'warn'; }
+  S.draft.req = parsed; S.draft.note = note; S.draft.noteKind = kind; S.step = 'confirm'; animate = true; save(); render();
+}
+
+/* ---------- records (saved plans) ---------- */
+function savePlan(){
+  const P = S.plan; if(!P) return;
+  if(S.saved.some(s => s.no === P.no)){ toast('この案はもう保存しています'); return; }
+  const res = P.result, pick = res.best || res.partial;
+  S.saved.unshift({
+    no:P.no, at:Date.now(), req:P.req, status:res.status, summary:summarize(res, P.req),
+    slot:pick ? pick.slot : null, cost:pick ? pick.cost : 0,
+    picks:(pick ? pick.picks : []).map(k => ({id:k.id, farm:k.farm, amt:k.amt, cost:k.cost}))
+  });
+  S.saved = S.saved.slice(0, MAX_SAVED);
+  save(); render();
+  toast('📖 記録に保存しました。生産者には送られていません', {label:'記録を見る', run:()=>go('records')});
+}
+// 保存した案を、いまの在庫で計算し直して比べる
+function checkSaved(s){
+  if(s.req.deadline < iso(today0())) return {kind:'past'};
+  const now = allocate(s.req), p = now.best || now.partial;
+  const sig = picks => JSON.stringify((picks||[]).map(k => [k.id, k.amt]));
+  const same = now.status === s.status && sig(p && p.picks) === sig(s.picks);
+  return {kind: same ? 'same' : 'changed', summary: summarize(now, s.req), ok: now.status === 'ok'};
+}
+function renderRecords(){
+  if(!S.saved.length){
+    $('#app').innerHTML = `${pageHead('記録 📖', '保存した仕入れ案を、あとで見直せます。保存しただけでは生産者に依頼は送られません。')}
+      <section class="card empty"><div class="big">📖</div><p>保存した仕入れ案はまだありません。</p><p class="cap">仕入れ案の画面で「この案を記録に保存する」を押すと、ここに残ります。保存しても在庫は確保されません。</p>
+      <button type="button" class="btn btn-main" style="width:auto" data-go="find">仕入れ案を作る →</button></section>`;
+    return;
+  }
+  $('#app').innerHTML = `${pageHead('記録 📖', '保存した案を、いまの在庫で計算し直して表示しています。保存は注文・在庫予約ではありません。')}
+    <div class="lst">${S.saved.map((s,i) => {
+      const c = checkSaved(s), u = s.req.unit;
+      const tag = c.kind === 'past' ? '<span class="tag">希望日を過ぎました</span>'
+        : c.kind === 'same' ? (s.status === 'ok' ? '<span class="tag good">現在も同じ案で成立</span>' : '<span class="tag hot">保存時と同じく不足</span>')
+        : '<span class="tag hot">在庫が変わりました</span>';
+      const s0 = s.slot ? slotLabel(s.slot) : null;
+      return `<article class="card" style="--t:${tint(s.req.item)}">
+        <div class="lc-top"><div class="face" aria-hidden="true">${art(s.req.item)}</div><div class="grow"><div class="cap">No.${h(s.no)}・${h(fmtStamp(s.at))} 保存</div><h3 style="font-size:16.5px">${h(s.summary)}</h3></div></div>
+        <div class="tags">${tag}<span class="tag">未確保</span></div>
+        <div class="cap">${reqChips(s.req)}</div>
+        ${s.picks.length ? `<ul class="lines">${s.picks.map(k=>`<li><span>👨‍🌾 ${h(k.farm)}</span><span>${q(k.amt,u)}・${yen(k.cost)}</span></li>`).join('')}</ul>` : ''}
+        ${s0 ? `<div class="cap">受け渡し：${h(s0.date)} ${h(s0.time)}・${h(s0.place)}</div>` : ''}
+        ${c.kind === 'changed' ? `<div class="msg warn">いまの在庫では：${h(c.summary)}</div>` : ''}
+        <div class="row">${c.kind !== 'past' ? `<button type="button" class="btn small btn-sub" data-reopen="${i}">この条件で開き直す</button>` : ''}<button type="button" class="btn small" data-del="${i}">削除</button></div>
+      </article>`; }).join('')}</div>`;
+}
+
+/* ---------- producer ---------- */
+const FD = () => ({farm:'', item:'トマト', variety:'', date:addDays(2), region:'能勢・豊能', qty:'', unit:'kg', price:'', place:PLACES[0], from:'10:00', to:'11:00', minQty:1, step:1, grade:'通常', reason:OFF_REASONS[0], surplus:false});
+const LISTING_KEYS = ['farm','item','variety','date','region','qty','unit','price','place','from','to','minQty','step','grade','reason','surplus'];
+const WSTEPS = ['食材','数量','価格','受け渡し','確認'];
+const REQUIRED = ['farm','item','region','qty','unit','minQty','step','price','date','place','from','to'];
+const filled = (d,k) => { const v = d[k]; if(['qty','minQty','step','price'].includes(k)) return +v > 0; return String(v ?? '').trim() !== ''; };
+function farmCard(l){
+  return `<article class="card lc${l.active?'':' off'}${flashId===l.id?' flash':''}" id="card-${l.id}" style="--t:${tint(l.item)}">
+    <div class="lc-top"><div class="face">${thumb(l)}</div>
+      <div class="grow"><h3 style="font-size:18px">${h(l.item)}${l.variety?`<small class="muted" style="font-size:12.5px;margin-left:6px">${h(l.variety)}</small>`:''}</h3><div class="where">${whereLine(l)}</div></div>
+      <div class="price"><b style="font-size:19px">¥${l.price.toLocaleString('ja-JP')}</b><span>/${h(l.unit)}</span></div></div>
+    <div class="tags">${listingStatus(l)}${l.grade==='規格外'?`<span class="tag">規格外・${h(l.reason)}</span>`:''}${l.surplus?'<span class="tag">余剰</span>':''}${l.demo?'<span class="tag">サンプル</span>':''}</div>
+    <dl class="kv">
+      <dt>受け渡し</dt><dd>${h(fmtDate(l.date))} ${h(l.from)}〜${h(l.to)}・${h(placeShort(l.place))}</dd>
+      <dt>販売単位</dt><dd>最低${q(l.minQty,l.unit)}・${q(l.step,l.unit)}刻み</dd>
+      <dt>更新</dt><dd class="cap" style="margin:0">${h(updText(l).replace(/^情報の更新：/, ''))}</dd>
+    </dl>
+    <div class="qty"><span class="sec-label">販売可能量</span>
+      <button type="button" class="step" data-dec="${l.id}" aria-label="減らす">−</button>
+      <input id="q-${l.id}" type="number" inputmode="decimal" min="0" max="999" step="${l.step}" value="${l.qty}" aria-label="${h(l.farm)} ${h(l.item)}の販売可能量">
+      <span>${h(l.unit)}</span>
+      <button type="button" class="step" data-inc="${l.id}" aria-label="増やす">＋</button>
+      <button type="button" class="btn small btn-sub" data-save="${l.id}">数量を変更</button>
+    </div>
+    <div class="qty"><span class="sec-label">出荷日</span><input id="qd-${l.id}" type="date" min="${iso(today0())}" value="${h(l.date)}" aria-label="${h(l.farm)} ${h(l.item)}の出荷日" style="width:auto"><button type="button" class="btn small btn-sub" data-savedate="${l.id}">出荷日を変更</button></div>
+    <div class="row"><button type="button" class="btn small" data-edit="${l.id}">✏️ 出品内容を編集</button><button type="button" class="btn small danger" data-ldel="${l.id}">🗑 削除</button><button type="button" class="btn small${l.active ? ' danger' : ' btn-sub'}" data-toggle="${l.id}">${l.active ? '公開を止める' : '公開を再開する'}</button></div>
+  </article>`;
+}
+// 出品の状態：公開中／公開停止中／在庫なし／受け渡し日を過ぎています
+function listingStatus(l){
+  if(!l.active) return '<span class="tag hot">公開停止中（仕入れ案に使われません）</span>';
+  if(l.qty <= 0) return '<span class="tag hot">在庫なし（仕入れ案に使われません）</span>';
+  if(l.date < iso(today0())) return '<span class="tag hot">受け渡し日を過ぎています（仕入れ案に使われません）</span>';
+  return '<span class="tag good">公開中</span>';
+}
+function wizBody(step, d){
+  // 農家名はログイン中の生産者のもの（デモの出品を編集するときはデモ農家名）で、ここでは変えられない
+  if(step === 1) return `<h2 class="sec-title">${art(d.item)} 何を出品しますか？</h2>
+    <div class="grid">
+      <div class="field full"><span class="sec-label">農家名</span><b>👨‍🌾 ${h(d.farm)}${isDemoFarm(d.farm) ? '（デモ農家）' : ''}</b></div>
+      <div class="field"><label for="f-item">食材</label><select id="f-item" data-f="item">${opt(ITEMS,d.item)}</select></div>
+      <div class="field"><label for="f-variety">品種（任意）</label><input id="f-variety" data-f="variety" maxlength="20" value="${h(d.variety)}" placeholder="例：千両"></div>
+      <div class="field"><label for="f-region">産地</label><select id="f-region" data-f="region">${opt(FARM_REGIONS,d.region)}</select></div>
+      <div class="field"><label for="f-grade">区分</label><select id="f-grade" data-f="grade"><option${d.grade==='通常'?' selected':''}>通常</option><option${d.grade==='規格外'?' selected':''}>規格外</option></select></div>
+      ${d.grade === '規格外' ? `<div class="field"><label for="f-reason">規格外の理由</label><select id="f-reason" data-f="reason">${opt(OFF_REASONS,d.reason)}</select></div>` : ''}
+      <div class="field full"><label class="check"><input id="f-surplus" data-f="surplus" type="checkbox"${d.surplus?' checked':''}> 余剰品として出す</label></div>
+    </div>
+    <p class="cap">前回の出品があれば、その条件を読み込んでいます。傷みや鮮度低下があるものは出品しないでください。</p>`;
+  if(step === 2) return `<h2 class="sec-title">⚖️ どれだけ売れますか？</h2>
+    <div class="grid">
+      <div class="field full"><label for="f-qty">販売可能量</label><div class="pair"><input id="f-qty" class="big-input" data-f="qty" type="number" inputmode="decimal" min="0.1" step="0.1" value="${h(d.qty)}" placeholder="0"><select id="f-unit" data-f="unit" aria-label="単位">${opt(UNITS,d.unit)}</select></div></div>
+      <div class="field"><label for="f-min">最低販売量</label><input id="f-min" data-f="minQty" type="number" inputmode="decimal" min="0.1" step="0.1" value="${h(d.minQty)}"></div>
+      <div class="field"><label for="f-step">販売刻み</label><input id="f-step" data-f="step" type="number" inputmode="decimal" min="0.1" step="0.1" value="${h(d.step)}"></div>
+    </div>
+    <div id="w-warn">${warnHtml(d)}</div>
+    <p class="cap">収穫総量ではなく、既存の注文分を除いて今回販売に回せる量を入れてください。</p>`;
+  if(step === 3) return `<h2 class="sec-title">💰 いくらで売りますか？</h2>
+    <div class="field"><label for="f-price">単価（税込・1${h(d.unit)}あたり）</label><div class="pair"><input id="f-price" class="big-input" data-f="price" type="number" inputmode="numeric" min="1" value="${h(d.price)}" placeholder="0"><span style="align-self:center;flex:0 0 auto">円/${h(d.unit)}</span></div></div>
+    <div id="w-total">${totalText(d)}</div>
+    <div id="w-warn">${warnHtml(d)}</div>`;
+  if(step === 4) return `<h2 class="sec-title">🧺 いつ・どこで渡せますか？</h2>
+    <div class="grid">
+      <div class="field full"><label for="f-date">受け渡し日（販売可能日）</label><input id="f-date" data-f="date" type="date" min="${iso(today0())}" value="${h(d.date)}"></div>
+      <div class="field full"><label for="f-place">受け渡し場所</label><select id="f-place" data-f="place">${opt(PLACES,d.place)}</select></div>
+      <div class="field"><label for="f-from">時間（から）</label><input id="f-from" data-f="from" type="time" value="${h(d.from)}"></div>
+      <div class="field"><label for="f-to">時間（まで）</label><input id="f-to" data-f="to" type="time" value="${h(d.to)}"></div>
+    </div>
+    <p class="cap">同じ日時・場所の農家さんどうしが、1つの仕入れ案にまとめられます。</p>`;
+  const u = d.unit, edit = n => `<button type="button" class="link" data-wstep="${n}">変更</button>`;
+  return `<h2 class="sec-title">✅ この内容で出品しますか？</h2>
+    <dl class="kv">
+      <dt>食材</dt><dd>${art(d.item)} ${h(d.item)}${d.variety?'（'+h(d.variety)+'）':''}・${h(d.farm)}・${h(d.region)}${d.grade==='規格外'?`・規格外（${h(d.reason)}）`:''}${d.surplus?'・余剰':''} ${edit(1)}</dd>
+      <dt>数量</dt><dd>${q(d.qty,u)}（最低${q(d.minQty,u)}・${q(d.step,u)}刻み） ${edit(2)}</dd>
+      <dt>価格</dt><dd>${yen(+d.price)}/${h(u)}（税込） ${edit(3)}</dd>
+      <dt>受け渡し</dt><dd>${h(fmtDate(d.date))} ${h(d.from)}〜${h(d.to)}・${h(placeShort(d.place))} ${edit(4)}</dd>
+    </dl>
+    ${warnHtml(d)}
+    <div class="sec-label">👀 飲食店からの見え方（プレビュー）</div>
+    <div class="preview-wrap">${previewCard({item:d.item, variety:d.variety, farm:d.farm || '（農家名）', region:d.region, price:+d.price || 0, unit:d.unit, qty:+d.qty || 0, minQty:+d.minQty || 1, step:+d.step || 1, date:d.date, place:d.place, from:d.from, to:d.to, grade:d.grade, reason:d.reason, surplus:d.surplus})}</div>
+    <p class="cap">出品した数量は、ほかの農家さんの供給と組み合わされて飲食店の仕入れ案に使われます。仕入れ案に使われただけでは数量は減りません。</p>`;
+}
+// 入力の確認（止めずに注意だけ出す）：同じ品目の出品と価格が大きく違う、数量が極端、など
+function inputWarnings(d){
+  const w = [], price = +d.price, qty = +d.qty;
+  const same = S.listings.filter(l => l.item === d.item && l.unit === d.unit && l.id !== (S.fdraft && S.fdraft.editId));
+  if(price > 0 && same.length){
+    const avg = same.reduce((s, l) => s + l.price, 0) / same.length;
+    if(price > avg * 2 || price < avg * 0.5) w.push(`同じ「${d.item}」の出品の平均（約¥${Math.round(avg).toLocaleString('ja-JP')}/${d.unit}）と大きく違います。単位（kg・個・束）や桁を確認してください`);
+  }
+  if(qty > 100) w.push(`販売可能量が${q(qty,d.unit)}と多めです。単位や桁を確認してください`);
+  if(qty > 0 && +d.minQty > 0 && qty < +d.minQty) w.push('販売可能量が最低販売量より少なくなっています');
+  return w;
+}
+const warnHtml = d => inputWarnings(d).map(x => `<div class="warnline">⚠ ${h(x)}</div>`).join('');
+const totalText = d => +d.price > 0 && +d.qty > 0 ? `<div class="msg ok">すべて売れたら：<b>${q(d.qty,d.unit)} × ${yen(+d.price)} ＝ ${yen(Math.round(+d.qty * +d.price))}</b></div>` : '';
+function validateStep(n, d){
+  const e = [], num = v => +v;
+  if(n === 1){
+    if(!String(d.farm).trim() || String(d.farm).trim().length > 30) e.push('農家名を30文字以内で入力してください');
+    else if(isDemoFarm(String(d.farm).trim()) && !(S.fdraft && S.fdraft.editId && (byId(S.fdraft.editId) || {}).demo)) e.push(`「${String(d.farm).trim()}」はデモ用の架空の農家名です。あなたの農家名を入力してください`);
+    if(String(d.variety).length > 20) e.push('品種は20文字以内で入力してください');
+    if(!ITEMS.includes(d.item)) e.push('食材を選んでください');
+    if(!FARM_REGIONS.includes(d.region)) e.push('産地を選んでください');
+    if(d.grade === '規格外' && !OFF_REASONS.includes(d.reason)) e.push('規格外の理由を選んでください');
+  } else if(n === 2){
+    if(!(num(d.qty) > 0 && num(d.qty) <= 999)) e.push('販売可能量は0より大きく999以下で入力してください');
+    if(!UNITS.includes(d.unit)) e.push('単位を選んでください');
+    if(!(num(d.minQty) > 0)) e.push('最低販売量は0より大きい数にしてください');
+    if(!(num(d.step) >= 0.1)) e.push('販売刻みは0.1以上にしてください');
+    if(num(d.minQty) > num(d.qty)) e.push('最低販売量が販売可能量より大きくなっています');
+  } else if(n === 3){
+    if(!(Number.isInteger(num(d.price)) && num(d.price) >= 1 && num(d.price) <= 100000)) e.push('単価は1〜100,000円の整数で入力してください');
+  } else if(n === 4){
+    if(!isISO(d.date) || d.date < iso(today0())) e.push('受け渡し日を今日以降で選んでください');
+    if(!PLACES.includes(d.place)) e.push('受け渡し場所を選んでください');
+    if(!d.from || !d.to || d.from >= d.to) e.push('時間の「から」を「まで」より前にしてください');
+  }
+  return e;
+}
+const progressText = left => left ? `<span>必須 ${REQUIRED.length - left}/${REQUIRED.length} 入力済み</span><b>あと${left}項目</b>` : `<span>必須 ${REQUIRED.length}/${REQUIRED.length} 入力済み</span><b>入力完了 ✓</b>`;
+// 新しい出品の下書き。農家名はアカウントのもの。前回の自分の出品があれば、その条件を読み込む
+function newDraft(){
+  const d = {...FD(), farm:me.farm || ''};
+  const prev = [...S.listings].reverse().find(l => l.mine);
+  if(prev) for(const k of ['region','unit','place','from','to','minQty','step','item','variety','price']) d[k] = prev[k];
+  return {step:1, d};
+}
+function renderWizard(){
+  const {step, d} = S.fdraft;
+  const left = REQUIRED.filter(k => !filled(d,k)).length;
+  $('#app').innerHTML = `${S.fdraft.editId ? pageHead('出品内容を編集 ✏️', '変えたいところだけ直して、最後に「保存」を押してください。保存すると仕入れ案の計算にすぐ反映されます。') : pageHead('販売できるものを登録 🌾', '5つのステップで出品できます。途中でやめても、続きから再開できます。')}
+  ${stepsBar(WSTEPS, step-1)}
+  <div class="progress ${left?'':'done'}" id="w-left">${progressText(left)}</div>
+  <section class="card">
+    ${wizBody(step, d)}
+    ${wizErr.length ? `<ul class="err-list">${wizErr.map(e=>`<li>${h(e)}</li>`).join('')}</ul>` : ''}
+    ${step < 5 ? '<button type="button" class="btn btn-main" id="w-next">次へ →</button>' : (S.fdraft.editId ? '<button type="button" class="btn btn-main" id="w-submit">この内容で保存する</button>' : '<button type="button" class="btn btn-main" id="w-submit">この内容で出品する 🌱</button>')}
+    ${step === 1 ? '<button type="button" class="link" id="w-cancel" style="align-self:center">やめる</button>' : '<button type="button" class="link" id="w-prev" style="align-self:center">戻る</button>'}
+  </section>`;
+}
+// 出品画面（生産者）：自分の出品と、だれでも試せるデモ農家の出品だけを表示する。他の生産者の出品は表示・変更しない
+function renderFarm(){
+  if(S.fdraft) return renderWizard();
+  const sort = ls => [...ls].sort((a,b) => a.item.localeCompare(b.item,'ja') || a.date.localeCompare(b.date) || a.farm.localeCompare(b.farm,'ja'));
+  const mine = sort(S.listings.filter(l => l.mine)), demo = sort(S.listings.filter(l => l.demo && l.editable));
+  const group = ls => [...new Set(ls.map(l=>l.item))].map(it => `<section class="sec"><h3 class="group-h"><span aria-hidden="true">${art(it)}</span>${h(it)}<span class="cap">${ls.filter(l=>l.item===it).length}件</span></h3><div class="lst">${ls.filter(l=>l.item===it).map(farmCard).join('')}</div></section>`).join('');
+  const added = justAdded && byId(justAdded);
+  $('#app').innerHTML = `
+    ${pageHead('出品 🌾', '販売に回せる量を出品すると、飲食店の仕入れ案に使われ、仕入れ依頼が届きます。数量・出荷日・公開状態はいつでも変えられます。')}
+    ${added ? `<section class="card celebrate"><div class="big" aria-hidden="true">🎉</div><h2>出品できました！</h2><p class="muted">あなたの${h(added.item)} ${q(added.qty,added.unit)}は、飲食店の仕入れ案の計算に使われます。<br>依頼が届くと「取引」に表示されます。</p></section>` : ''}
+    <button type="button" class="btn btn-main" id="open-form">販売できるものを登録 ＋</button>
+    <section class="sec"><h2 class="sec-title">${h(me.farm)}の出品（${mine.length}件）</h2>
+      ${mine.length ? group(mine) : '<div class="mini"><span class="s">まだ出品はありません。上のボタンから登録できます。</span></div>'}</section>
+    ${demo.length ? `<details class="sec"><summary class="sec-title" style="cursor:pointer">デモ農家の出品（${demo.length}件・だれでも試せます）</summary><p class="cap" style="margin:8px 0">架空のデモデータです。数量を変えて、仕入れ案や依頼への回答を試せます。</p>${group(demo)}</details>` : ''}`;
+  if(flashId){ const el = document.getElementById('card-'+flashId); if(el) el.scrollIntoView({block:'center'}); flashId = null; }
+}
+function confetti(){
+  if(reduceMotion()) return;
+  const colors = ['#8cc79a','#f3d77b','#f5b48a','#a98bc4','#f19a7f','#e9dcc2'];
+  for(let i = 0; i < 36; i++){
+    const c = document.createElement('i');
+    c.className = 'confetti';
+    c.style.left = (20 + Math.random()*60) + 'vw';
+    c.style.background = colors[i % colors.length];
+    c.style.setProperty('--dx', (Math.random()*160 - 80) + 'px');
+    c.style.setProperty('--r', (Math.random()*720 - 360) + 'deg');
+    c.style.animationDelay = (Math.random()*0.25) + 's';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 2000);
+  }
+}
+
+/* ---------- settings ---------- */
+function renderSettings(){
+  const R = me.role === 'restaurant';
+  $('#app').innerHTML = `
+    ${pageHead('設定 ⚙️')}
+    <section class="card">
+      <h2 class="sec-title">👤 アカウント</h2>
+      <dl class="kv">
+        <dt>利用者の種類</dt><dd>${R ? '🍽️' : '🌾'} ${ROLE_LABEL[me.role]}</dd>
+        <dt>${R ? '店名' : 'お名前'}</dt><dd>${h(me.name)}</dd>
+        ${me.farm ? `<dt>農家名</dt><dd>${h(me.farm)}</dd>` : ''}
+        <dt>ログインID</dt><dd>${h(me.loginId)}</dd>
+      </dl>
+      <p class="cap">利用者の種類は取引の記録と結びついているため、あとから変更できません。もう一方として使うときは、別のアカウントを登録してください。</p>
+      <button type="button" class="btn" id="logout">ログアウト</button>
+    </section>
+    <section class="card">
+      <h2 class="sec-title">🧺 このアプリでできること</h2>
+      <p class="muted">飲食店の仕入れの希望と、生産者が登録した在庫を照らし合わせて仕入れ案を作り、生産者に仕入れ依頼を送れます。生産者は依頼を受ける・断る・条件の変更を提案でき、双方が同じ条件に同意すると取引成立です。成立後は、準備・受け渡し・受け取り確認までの進み具合を双方で記録できます。</p>
+      <p class="cap">決済、配送、在庫の確保（予約）は行いません。受け渡しは、合意した日時・場所で当事者どうしが行います。取引が成立しても出品の数量は自動では減りません。</p>
+    </section>
+    <section class="card">
+      <h2 class="sec-title">🔒 このアプリが保存する情報</h2>
+      <dl class="kv">
+        <dt>サーバー（全端末で共有）</dt><dd>出品・在庫、アカウント（ログインID・名前・利用者の種類・農家名。パスワードはハッシュ化した値だけ）、仕入れ依頼と取引（条件・メッセージ・進み具合）</dd>
+        <dt>だれが見られるか</dt><dd>取引は、その取引の飲食店と生産者だけが見られます（デモ農家宛ての依頼は、デモを試す生産者アカウントからも見られます）</dd>
+        <dt>この端末だけ</dt><dd>入力の下書き、いまの仕入れ案、記録に保存した案（アカウントごと）</dd>
+        <dt>AIに送るもの</dt><dd>仕入れの希望文（条件の読み取り）、メニュー案を作るときに選んだ食材の品目・品種・区分。AIは在庫や取引を読み書きしません</dd>
+      </dl>
+      <div>${aiStatus()}</div>
+      ${server.loaded && !server.shared ? '<div class="msg warn">共有データベースが未設定のため、データはサーバーの一時メモリに置かれています（再起動で消えます）。</div>' : ''}
+    </section>
+    <section class="card">
+      <h2 class="sec-title">🗂️ データ</h2>
+      ${!R ? `${server.editLocked ? `<div class="field"><label for="passcode">管理者用パスコード（デモデータを初期状態に戻すときに必要）</label><input id="passcode" type="password" autocomplete="off" value="${h(getPass())}"></div>` : ''}
+      <button type="button" class="btn" id="reset">デモ農家の出品を初期状態に戻す（登録された出品は残します）</button>` : ''}
+      <button type="button" class="btn danger" id="wipe">この端末の下書き・記録を消す</button>
+    </section>
+    <p class="cap">デモ農家の出品・価格は架空のデモデータです。実在の農園の在庫・価格・販売条件ではありません。</p>`;
+}
+
+/* ---------- events ---------- */
+// 2回押しで実行する確認つきボタン
+function armed(t, msg){
+  if(t.dataset.armed === '1') return true;
+  t.dataset.armed = '1'; t.dataset.label = t.textContent; t.textContent = msg;
+  setTimeout(() => { if(t.isConnected && t.dataset.armed === '1'){ t.dataset.armed = ''; t.textContent = t.dataset.label; } }, 5000);
+  return false;
+}
+function readWizard(){ document.querySelectorAll('#app [data-f]').forEach(el => { S.fdraft.d[el.dataset.f] = el.type === 'checkbox' ? el.checked : el.value; }); }
+const listingOf = l => Object.fromEntries(LISTING_KEYS.map(k => [k, l[k] ?? '']));
+document.addEventListener('click', ev => {
+  const t = ev.target.closest('button');
+  if(!t){
+    // ボタン以外：シートの背景
+    if(ev.target.classList && ev.target.classList.contains('sheet-bg')) return closeSheet();
+    // 利用者選択カードは、ボタン以外の場所を押してもカードのボタンと同じ動きにする
+    const rc = ev.target.closest && ev.target.closest('[data-role-card]');
+    if(rc) rc.querySelector('button')?.click();
+    return;
+  }
+  const id = t.id, ds = t.dataset;
+  if(ds.closeSheet != null) return closeSheet();
+
+  // 未ログイン：カードを選ぶ → その種類での新規登録（ログインにも切り替えられる）
+  if(ds.start){ authView = {role:ds.start, mode:'signup'}; animate = true; render(); window.scrollTo(0,0); return; }
+  if(ds.auth){
+    if(ds.auth === 'signup' && !(authView && authView.role)){ authView = null; } else authView = {role:authView ? authView.role : null, mode:ds.auth};
+    animate = true; render(); window.scrollTo(0,0); return;
+  }
+  if(ds.setrole){
+    const farm = ($('#rs-farm')?.value || '').trim();
+    t.disabled = true;
+    api('/api/auth', {op:'setRole', role:ds.setrole, farm}).then(r => {
+      t.disabled = false;
+      if(r.ok || (r.data && r.data.user)){ me = r.data.user; render(); fetchDeals(); return; }
+      $('#rs-err').innerHTML = `<div class="msg err">${h(r.data.error || '設定できませんでした')}</div>`;
+    });
+    return;
+  }
+  if(id === 'logout') return logout();
+
+  // 取引
+  if(ds.deals){ dealFilter = ds.deals; return go('deals'); }
+  if(ds.filter){ dealFilter = ds.filter; counterId = null; render(); return; }
+  if(ds.dealAct){
+    if(ds.dealAct === 'counter'){ counterId = ds.id; render(); document.getElementById('deal-' + ds.id)?.scrollIntoView({block:'start'}); return; }
+    if((ds.dealAct === 'decline' || ds.dealAct === 'cancel') && !armed(t, ds.dealAct === 'decline' ? 'もう一度押すと断ります' : 'もう一度押すと取りやめます')) return;
+    return dealAct(ds.id, ds.dealAct);
+  }
+  if(ds.counterClose != null){ counterId = null; render(); return; }
+  if(id === 'send-plan'){ sheetMode = 'send'; sheetId = 'send'; renderSheet(); return; }
+  if(id === 'send-req') return sendRequests(t);
+  // 食材を探す：スワイプ・一覧・詳細
+  if(ds.browseView){ browseView = ds.browseView; render(); return; }
+  if(id === 'mk-like') return likeCurrent(true);
+  if(id === 'mk-skip') return skipCurrent(true);
+  if(id === 'mk-restart'){ marcheIdx = 0; const o = $('#mk-out'); if(o){ o.innerHTML = deckHtml(); bindDeck(); } return; }
+  if(id === 'sheet-skip'){ closeSheet(); return skipCurrent(false); }
+  if(id === 'sheet-like'){ closeSheet(); return likeCurrent(false); }
+  if(ds.unlike){ S.liked = S.liked.filter(x => x !== ds.unlike); save(); const lk = $('#liked-sec'); if(lk) lk.outerHTML = likedSectionHtml(); toast('いいねを外しました'); return; }
+  if(id === 'mk-geo'){
+    if(!navigator.geolocation){ geoStatus = 'unsupported'; const w = $('#mk-geo-wrap'); if(w) w.innerHTML = geoButtonHtml(); return; }
+    geoStatus = 'loading'; t.disabled = true; t.textContent = '現在地を取得しています…';
+    navigator.geolocation.getCurrentPosition(pos => {
+      myCoords = {lat:pos.coords.latitude, lng:pos.coords.longitude}; geoStatus = 'ok'; marcheIdx = 0;
+      const o = $('#mk-out'); if(o){ o.innerHTML = deckHtml(); bindDeck(); }
+      const w = $('#mk-geo-wrap'); if(w) w.innerHTML = geoButtonHtml();
+    }, () => { geoStatus = 'denied'; const w = $('#mk-geo-wrap'); if(w) w.innerHTML = geoButtonHtml(); }, {timeout:8000});
+    return;
+  }
+  // 出品の内容（品目・数量・受け渡し日・地域・場所・規格外）を入れた状態で、仕入れ案の条件確認へ
+  if(ds.browseBuild){
+    const l = byId(ds.browseBuild); if(!l) return;
+    const region = Object.keys(REGION_GROUPS).find(k => (REGION_GROUPS[k] || []).includes(l.region)) || '';
+    S.draft.text = `${l.farm}の${l.item}を${q(l.qty,l.unit)}`;
+    S.draft.req = clean({item:l.item, qty:l.qty, unit:l.unit, deadline:l.date, dateMode:'by', region, place:l.place, allowOff:l.grade === '規格外'});
+    S.draft.note = `${h(l.farm)}の${h(l.item)}をもとに条件を入れました。必要なところを直してください。`; S.draft.noteKind = 'ok';
+    S.step = 'confirm'; return go('shop');
+  }
+
+  // limited menu
+  if(id === 'plan-menu'){ const p = S.plan && (S.plan.result.best || S.plan.result.partial); return openMenu(p ? p.picks.map(k => k.id) : []); }
+  if(ds.menuadd){ menuSel = [...new Set([...menuSel, ds.menuadd])]; return renderSheet(); }
+  if(ds.menudel){ menuSel = menuSel.filter(x => x !== ds.menudel); return renderSheet(); }
+  if(id === 'menu-ai'){
+    const sel = menuSel.map(byId).filter(Boolean); if(!sel.length) return;
+    t.disabled = true; t.textContent = 'AIが考えています…';
+    api('/api/draft', {kind:'menu', listingIds:sel.map(l => l.id), wants:{note:menuPurpose, qty:menuServ}}).then(r => {
+      menuAI = r && r.ok && r.data.text ? r.data.text : null;
+      if(!menuAI) toast('AIのメニュー案を作れませんでした。下の料理例を使ってください', null, 'err');
+      if(sheetMode === 'menu') renderSheet();
+    }).catch(() => { toast('通信できませんでした', null, 'err'); if(sheetMode === 'menu') renderSheet(); });
+    return;
+  }
+
+  if(id === 'retry'){ server.error = ''; render(); return fetchListings(); }
+  if(ds.ldel){
+    const l = byId(ds.ldel); if(!l) return;
+    if(!armed(t, 'もう一度押すと削除（元に戻せません）')) return;
+    t.disabled = true;
+    mutate({op:'delete', id:l.id}).then(res => {
+      if(!res){ t.disabled = false; return; }
+      render();
+      toast(`${l.farm}の${l.item}を削除しました。仕入れ案の計算からも外れます`, null, 'ok');
+    });
+    return;
+  }
+  if(ds.savedate){
+    const l = byId(ds.savedate); if(!l) return;
+    const nd = ($('#qd-' + l.id) || {}).value || '';
+    if(!isISO(nd) || nd < iso(today0())){ toast('出荷日は今日以降の日付を選んでください', null, 'err'); return; }
+    if(nd === l.date){ toast('出荷日は変わっていません'); return; }
+    t.disabled = true;
+    mutate({op:'edit', id:l.id, listing:{...listingOf(l), date:nd}}).then(res => { t.disabled = false; if(!res) return; flashId = l.id; render(); toast(`${l.farm}の${l.item}の出荷日を${fmtDate(nd)}に変更しました。仕入れ案の計算に反映済みです`, null, 'ok'); });
+    return;
+  }
+  if(ds.edit){
+    const l = byId(ds.edit); if(!l) return;
+    S.fdraft = {step:1, editId:l.id, d:{...FD(), ...listingOf(l)}};
+    if(!S.fdraft.d.reason) S.fdraft.d.reason = OFF_REASONS[0];
+    closeSheet(); S.tab = 'farm';
+    wizErr = []; justAdded = null; animate = true; save(); render(); window.scrollTo(0,0); return;
+  }
+  if(ds.tab) return go(ds.tab);
+  if(id === 'back'){ const f = backTarget(); if(f){ if(S.fdraft && S.tab === 'farm') readWizard(); f(); animate = true; save(); render(); window.scrollTo(0,0); } return; }
+
+  // home / shortcuts
+  if(ds.go === 'find'){ S.step = 'input'; return go('shop'); }
+  if(ds.go === 'sell'){ if(!S.fdraft){ S.fdraft = newDraft(); wizErr = []; } return go('farm'); }
+  if(ds.resume) return go(ds.resume);
+  if(ds.restart === 'shop'){ S.step = 'input'; S.draft = {text:'', req:null, note:''}; save(); return go('shop'); }
+  if(ds.restart === 'farm'){ S.fdraft = newDraft(); wizErr = []; save(); return go('farm'); }
+  if(ds.openPlan != null){ S.step = 'result'; return go('shop'); }
+
+  // restaurant
+  if(ds.ex != null){ S.draft.text = ds.ex; S.draft.note = ''; save(); render(); return; }
+  if(id === 'parse') return doParse();
+  if(id === 'manual'){ S.draft.text = ($('#req-text')?.value || '').trim(); S.draft.req = clean({}); S.draft.note = '項目を選んで続けられます。'; S.draft.noteKind = 'ok'; S.step = 'confirm'; animate = true; save(); render(); return; }
+  if(id === 'back-input'){ S.step = 'input'; S.draft.note = ''; animate = true; save(); render(); return; }
+  if(id === 'build'){ const {r, err} = readConfirm(); if(err.length){ $('#c-err').innerHTML = `<ul class="err-list">${err.map(e=>`<li>${h(e)}</li>`).join('')}</ul>`; return; } S.draft.req = {...S.draft.req, ...r}; return buildPlan(r); }
+  if(ds.sugg != null){ const s = S._sugg[+ds.sugg]; const r = {...S.plan.req, ...s.patch}; S.draft.req = {...r, allowOffStated:true}; return buildPlan(r); }
+  if(id === 'edit-cond' || id === 'edit-cond-top'){ S.draft.req = {...S.plan.req, allowOffStated:true}; S.draft.note = ''; S.step = 'confirm'; animate = true; save(); render(); return; }
+  if(id === 'new-req'){ S.step = 'input'; S.draft = {text:'', req:null, note:''}; animate = true; save(); render(); return; }
+  if(id === 'save-plan') return savePlan();
+
+  // records
+  if(ds.reopen != null){ const s = S.saved[+ds.reopen]; if(!s) return; S.draft.req = {...s.req, allowOffStated:true}; S.draft.note = ''; return buildPlan(s.req); }
+  if(ds.del != null){ if(!armed(t, 'もう一度押すと削除')) return; S.saved.splice(+ds.del, 1); save(); render(); toast('保存した案を削除しました'); return; }
+
+  // producer wizard
+  if(id === 'open-form'){ S.fdraft = newDraft(); wizErr = []; justAdded = null; animate = true; save(); render(); window.scrollTo(0,0); $('#f-farm')?.focus(); return; }
+  if(id === 'w-cancel'){ S.fdraft = null; wizErr = []; animate = true; save(); render(); return; }
+  if(id === 'w-prev'){ readWizard(); S.fdraft.step--; wizErr = []; animate = true; save(); render(); window.scrollTo(0,0); return; }
+  if(ds.wstep){ S.fdraft.step = +ds.wstep; wizErr = []; animate = true; save(); render(); window.scrollTo(0,0); return; }
+  if(id === 'w-next'){
+    readWizard();
+    wizErr = validateStep(S.fdraft.step, S.fdraft.d);
+    if(!wizErr.length){ S.fdraft.step++; animate = true; }
+    save(); render(); window.scrollTo(0,0); return;
+  }
+  if(id === 'w-submit'){
+    const d = S.fdraft.d;
+    wizErr = [1,2,3,4].flatMap(n => validateStep(n, d));
+    if(wizErr.length){ render(); return; }
+    const listing = {...listingOf(d), farm:String(d.farm).trim(), variety:String(d.variety).trim(), qty:+d.qty, price:+d.price, minQty:+d.minQty, step:+d.step, surplus:d.surplus === true};
+    const editId = S.fdraft.editId;
+    t.disabled = true; t.textContent = editId ? '保存しています…' : '出品しています…';
+    mutate(editId ? {op:'edit', id:editId, listing} : {op:'add', listing}).then(res => {
+      if(!res){ if(t.isConnected){ t.disabled = false; t.textContent = editId ? 'この内容で保存する' : 'この内容で出品する 🌱'; } return; }
+      S.fdraft = null; flashId = res.id; justAdded = editId ? null : res.id; animate = true; save(); render(); window.scrollTo(0,0);
+      if(editId){ toast(`${listing.farm}の${listing.item}を更新しました。仕入れ案の計算に反映済みです`, null, 'ok'); return; }
+      confetti();
+      toast(`${listing.farm}の${listing.item} ${q(listing.qty,listing.unit)}を出品しました`, S.plan ? {label:'仕入れ案を見る', run:()=>{ S.step = 'result'; go('shop'); }} : null, 'ok');
+    });
+    return;
+  }
+
+  // producer listings
+  if(ds.dec || ds.inc){ const l = byId(ds.dec || ds.inc), inp = $('#q-'+l.id); inp.value = Math.max(0, +(+inp.value + (ds.inc ? l.step : -l.step)).toFixed(1)); return; }
+  const toPlan = item => S.plan && S.plan.req.item === item ? {label:'仕入れ案を見る', run:()=>{ S.step = 'result'; go('shop'); }} : null;
+  if(ds.save){
+    const l = byId(ds.save), nv = +$('#q-'+l.id).value;
+    if(!(nv >= 0 && nv <= 999)){ toast('販売可能量は0〜999で入力してください'); return; }
+    if(nv === l.qty){ toast('数量は変わっていません'); return; }
+    const old = l.qty, who = l.farm, item = l.item, unit = l.unit, lid = l.id;
+    t.disabled = true;
+    mutate({op:'qty', id:lid, qty:nv}).then(res => {
+      t.disabled = false;
+      if(!res) return;
+      flashId = lid; render();
+      toast(`${who}の${item}を${q(old,unit)}→${q(nv,unit)}に変更しました`, toPlan(item));
+    });
+    return;
+  }
+  if(ds.toggle){
+    const l = byId(ds.toggle), who = l.farm, item = l.item, lid = l.id;
+    t.disabled = true;
+    mutate({op:'toggle', id:lid}).then(res => {
+      t.disabled = false;
+      if(!res) return;
+      const now = byId(lid); flashId = lid; render();
+      toast(now && now.active ? `${who}の${item}の公開を再開しました` : `${who}の${item}の公開を止めました（仕入れ案に使われなくなります）`, toPlan(item));
+    });
+    return;
+  }
+
+  // settings
+  if(id === 'reset'){
+    if(!armed(t, 'デモの出品だけを初期状態に戻します。もう一度押すと実行')) return;
+    mutate({op:'reset'}).then(d => { if(!d) return; render(); toast(`デモデータを初期状態に戻しました（登録された出品${d.kept ? d.kept.listings : 0}件は残しています）`, null, 'ok'); });
+    return;
+  }
+  if(id === 'wipe'){
+    if(!armed(t, '下書き・仕入れ案・記録が消えます。もう一度押すと実行')) return;
+    const listings = S.listings;
+    S = freshState(); S.listings = listings; S.visited = true; S.tab = 'settings';
+    counterId = null;
+    save(); render(); toast('この端末の下書き・記録を消しました');
+  }
+});
+function onField(ev){
+  const el = ev.target;
+  if(el.dataset.mn){ if(el.dataset.mn === 'serv') menuServ = el.value; else menuPurpose = el.value; const o = $('#menu-out'); if(o) o.innerHTML = menuOut(); return; }
+  if(el.id === 'req-text'){ S.draft.text = el.value; save(); return; }
+  if(el.dataset.f && S.fdraft){
+    S.fdraft.d[el.dataset.f] = el.type === 'checkbox' ? el.checked : el.value;
+    save();
+    const left = REQUIRED.filter(k => !filled(S.fdraft.d,k)).length, p = $('#w-left');
+    if(p){ p.innerHTML = progressText(left); p.classList.toggle('done', !left); }
+    const tot = $('#w-total'); if(tot) tot.innerHTML = totalText(S.fdraft.d);
+    const wn = $('#w-warn'); if(wn) wn.innerHTML = warnHtml(S.fdraft.d);
+    // 選択肢で見た目が変わる項目だけ描き直す（入力欄のchangeで描き直すと、直後の「次へ」のタップが消える）
+    if(ev.type === 'change' && el.tagName === 'SELECT' && (el.dataset.f === 'grade' || el.dataset.f === 'item')) render();
+  }
+}
+document.addEventListener('input', onField);
+document.addEventListener('change', ev => {
+  onField(ev);
+  const el = ev.target;
+  if(el.id === 'mk-item' || el.id === 'mk-region'){
+    if(el.id === 'mk-item') marcheItem = el.value; else marcheRegion = el.value;
+    el.classList.toggle('on', Boolean(el.value));
+    marcheIdx = 0;
+    const o = $('#mk-out'); if(o){ o.innerHTML = deckHtml(); bindDeck(); }
+    return;
+  }
+  if(el.id === 'passcode'){ setPass(el.value.trim()); toast('🔑 パスコードをこの端末に保存しました'); return; }
+});
+document.addEventListener('keydown', ev => {
+  if(ev.key === 'Escape' && sheetId){ closeSheet(); return; }
+  if(ev.key === 'Enter' && ev.target.classList && ev.target.classList.contains('swipe-card')){ ev.preventDefault(); openListingSheet(ev.target.dataset.swipeId); return; }
+  if(ev.key === 'Enter' && !ev.shiftKey && !ev.isComposing && ev.target.id === 'req-text'){
+    ev.preventDefault(); doParse();
+  }
+});
+
+// フォームの送信（Enterキーでも送れるように）
+document.addEventListener('submit', ev => {
+  const f = ev.target;
+  if(f.id === 'auth-form'){ ev.preventDefault(); return doAuth(); }
+  if(f.dataset.counterForm){
+    ev.preventDefault();
+    const id = f.dataset.counterForm, v = k => (document.getElementById(`k-${k}-${id}`) || {}).value || '';
+    return dealAct(id, 'counter', {terms:{qty:+v('qty'), price:+v('price'), date:v('date'), from:v('from'), to:v('to'), place:v('place')}, note:v('note').trim()});
+  }
+});
+
+// 起動：ログイン状態を確かめてから、その人の画面を出す
+render();
+fetchListings({quiet:true});
+api('/api/auth').then(r => {
+  authChecked = true;
+  if(r.ok && r.data.user) return signedIn(r.data.user, false);
+  render();
+}).catch(() => { authChecked = true; render(); toast('通信できませんでした。通信状態を確かめて、読み込み直してください', null, 'err'); });
+// 別の端末で在庫が変わったら、仕入れ案・ホーム・記録の画面に反映する
+setInterval(() => { if(!document.hidden && me && server.loaded){ if(!editing()) fetchListings({quiet:true}); fetchDeals({quiet:true}); } }, 15000);
+document.addEventListener('visibilitychange', () => { if(!document.hidden && me && server.loaded){ fetchListings({quiet:true}); fetchDeals({quiet:true}); } });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#2f6b45"/>
+  <!-- three small supplies flowing into one basket -->
+  <circle cx="156" cy="168" r="42" fill="#f3c9a8"/>
+  <circle cx="256" cy="140" r="34" fill="#e7f0e9"/>
+  <circle cx="352" cy="172" r="26" fill="#f3c9a8"/>
+  <path d="M156 214 L230 286 M256 178 L256 280 M352 202 L282 286" stroke="#e7f0e9" stroke-width="16" stroke-linecap="round" fill="none" opacity=".7"/>
+  <path d="M120 300 H392 L364 404 Q360 420 342 420 H170 Q152 420 148 404 Z" fill="#ffffff"/>
+</svg>
