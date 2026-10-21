@@ -10,7 +10,7 @@ import { getRaw, mgetRaw, setNX, setRaw, incr, sadd, smembers, casRaw } from '..
 import { load } from '../lib/inventory.js';
 import { todayJST } from '../lib/domain.js';
 import { currentUser, userIdByFarm } from '../lib/auth.js';
-import { sideOf, apply, view, checkTerms } from '../lib/deals.js';
+import { sideOf, apply, view, checkTerms, withCurrentPlaces, CONTACT_ST } from '../lib/deals.js';
 
 function send(res, status, body) {
   res.setHeader('Cache-Control', 'no-store');
@@ -18,14 +18,34 @@ function send(res, status, body) {
 }
 const MAX_PICKS = 10;
 
+// 相手の連絡先。マッチング成立後の取引の当事者にだけ、相手1人分を返す（登録がなければ空文字＝画面で「未登録」）。
+// デモ農家宛ての取引は、相手がデモ（架空）なので連絡先がない。また、どの生産者からも見えるため飲食店の連絡先も出さない
+function contactFor(d, side, users) {
+  if (!CONTACT_ST.includes(d.status)) return null;
+  if (d.demo && !d.producerId) return { name: side === 'restaurant' ? d.farm : d.restaurantName, demo: true, phone: '', email: '' };
+  const u = users.get(side === 'restaurant' ? d.producerId : d.restaurantId);
+  return { name: side === 'restaurant' ? d.farm : d.restaurantName, phone: (u && u.phone) || '', email: (u && u.email) || '' };
+}
+async function loadUsers(ids) {
+  const list = [...new Set(ids.filter(Boolean))];
+  const raws = await mgetRaw(list.map(id => `user:${id}`));
+  return new Map(list.map((id, i) => [id, raws[i] ? JSON.parse(raws[i]) : null]));
+}
+async function viewWithContact(d, side) {
+  const other = side === 'restaurant' ? d.producerId : d.restaurantId;
+  const users = CONTACT_ST.includes(d.status) ? await loadUsers([other]) : new Map();
+  return view(d, side, contactFor(d, side, users));
+}
+
 async function myDeals(user) {
   const ids = new Set(await smembers(`deals:u:${user.id}`));
   if (user.role === 'producer') for (const id of await smembers('deals:demo')) ids.add(id);
   const raws = await mgetRaw([...ids].map(id => `deal:${id}`));
-  return raws.filter(Boolean).map(r => JSON.parse(r))
+  const mine = raws.filter(Boolean).map(r => JSON.parse(r))
     .map(d => ({ d, side: sideOf(d, user) })).filter(x => x.side)
-    .sort((a, b) => b.d.updatedAt - a.d.updatedAt)
-    .map(x => view(x.d, x.side));
+    .sort((a, b) => b.d.updatedAt - a.d.updatedAt);
+  const users = await loadUsers(mine.filter(x => CONTACT_ST.includes(x.d.status)).map(x => x.side === 'restaurant' ? x.d.producerId : x.d.restaurantId));
+  return mine.map(x => view(x.d, x.side, contactFor(x.d, x.side, users)));
 }
 
 async function createRequest(user, b) {
@@ -94,14 +114,15 @@ export default async function handler(req, res) {
       const side = deal && sideOf(deal, user);
       // 当事者でなければ、取引があるかどうかも知らせない
       if (!side) return send(res, 404, { error: '取引が見つかりません' });
-      if (Number(b.v) !== deal.v) return send(res, 409, { error: 'この取引は、ほかの操作ですでに更新されています。最新の状態を表示しました', deal: view(deal, side) });
-      const r = apply(deal, side, String(b.action || ''), { terms: b.terms, note: b.note });
-      if (r.error) return send(res, r.status, { error: r.error, errors: r.errors, deal: view(deal, side) });
+      if (Number(b.v) !== deal.v) return send(res, 409, { error: 'この取引は、ほかの操作ですでに更新されています。最新の状態を表示しました', deal: await viewWithContact(deal, side) });
+      // 拠点の名前が変わっていれば、新しい名前で条件を確認・保存する
+      const r = apply(withCurrentPlaces(deal), side, String(b.action || ''), { terms: b.terms, note: b.note });
+      if (r.error) return send(res, r.status, { error: r.error, errors: r.errors, deal: await viewWithContact(deal, side) });
       if (!(await casRaw(key, raw, JSON.stringify(r.deal)))) {
         const now = JSON.parse(await getRaw(key));
-        return send(res, 409, { error: 'この取引は、ほかの操作ですでに更新されています。最新の状態を表示しました', deal: view(now, side) });
+        return send(res, 409, { error: 'この取引は、ほかの操作ですでに更新されています。最新の状態を表示しました', deal: await viewWithContact(now, side) });
       }
-      return send(res, 200, { deal: view(r.deal, side) });
+      return send(res, 200, { deal: await viewWithContact(r.deal, side) });
     }
     return send(res, 400, { error: '使えない操作です' });
   } catch (err) {

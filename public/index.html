@@ -203,6 +203,18 @@ nav.tabs .cnt{position:absolute;top:4px;left:calc(50% + 8px)}
 .hist ol{margin:6px 0 0;padding-left:18px;color:var(--ink-2)}
 .deal-filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;margin-inline:-16px;padding-inline:16px}
 .deal-filters .chip{flex:none}
+/* マッチング成立後のエリアと連絡先 */
+.matchbox{background:linear-gradient(160deg,var(--green-pale),var(--yellow-soft));border:2px solid var(--green);border-radius:20px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.matchbox.done{border-color:var(--line)}
+.matchbox .mb-h{display:flex;align-items:center;gap:8px;font-size:17px;color:var(--green)}
+.matchbox p{font-size:14px}
+.matchbox .btn{min-height:50px}
+.ct-card{background:var(--card);border:2px solid var(--green);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.ct-name{font-size:19px}
+.ct-guide{font-size:14px;color:var(--ink-2)}
+.ct-row{display:flex;align-items:center;gap:12px;background:var(--green-pale);border-radius:16px;padding:10px 14px;min-height:60px}
+.ct-ic{width:40px;height:40px;flex:none;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:19px}
+.ct-link{font-size:18px;font-weight:700;color:var(--green);overflow-wrap:anywhere;text-underline-offset:3px}
 /* ---------- 食材をさがす：スワイプデッキ（10/16版から移植） ---------- */
 .produce{position:relative;display:flex;align-items:center;justify-content:center;background:radial-gradient(120% 90% at 30% 20%,#fff 0%,color-mix(in srgb,var(--t) 70%,#fff) 42%,color-mix(in srgb,var(--t) 100%,#f0e6d6) 100%);overflow:hidden}
 .produce::after{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.55) 1.2px,transparent 1.3px);background-size:18px 18px;mask-image:linear-gradient(180deg,#000,transparent 70%);-webkit-mask-image:linear-gradient(180deg,#000,transparent 70%);pointer-events:none}
@@ -746,7 +758,8 @@ const REGION_GROUPS = {
   '兵庫県':['兵庫県']
 };
 const FARM_REGIONS = ['能勢・豊能','北摂','大阪市','北河内','中河内','南河内','泉州','京都府','兵庫県','奈良県'];
-const PLACES = ['拠点P（豊中・共通受渡拠点）','拠点Q（能勢・道の駅）','亀岡集荷所'];
+// 受け渡し拠点はサーバーの設定（lib/places.js または環境変数 PLACES_JSON）から /api/listings で受け取る。ここに名前を書かない
+let PLACES = [], PLACE_INFO = {};
 const OFF_REASONS = ['形の不揃い','サイズ不揃い','色むら','軽い表面傷'];
 const TABS = ['home','shop','browse','farm','deals','records','settings'];
 // 利用者の種類ごとのタブ。種類はログイン中のアカウント（サーバーに保存）で決まる
@@ -787,7 +800,7 @@ const h = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;'
 const yen = n => n.toLocaleString('ja-JP') + '円';
 const q = (n,u) => `${+(+n).toFixed(1)}${u}`;
 const opt = (list, sel, blank) => (blank!=null?`<option value="">${h(blank)}</option>`:'') + list.map(v => `<option${v===sel?' selected':''}>${h(v)}</option>`).join('');
-const placeShort = p => String(p).replace(/（.*）/, '');
+const placeShort = p => (PLACE_INFO[p] && PLACE_INFO[p].short) || String(p).replace(/（.*）/, '');
 const pageHead = (title, lead) => `<header class="page-h"><h1 class="page-title">${title}</h1>${lead ? `<p class="lead">${h(lead)}</p>` : ''}</header>`;
 const lowStock = l => l.qty <= Math.max(2 * l.minQty, 2);
 const reduceMotion = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -847,6 +860,7 @@ async function fetchListings(opts){
   try { r = await api('/api/listings'); } catch(e) {}
   if(!r || !r.ok){ server.error = 'データを読み込めませんでした。通信状態を確かめて、もう一度読み込んでください。'; if(!opts?.quiet || !server.loaded) render(); return; }
   applyData(r.data);
+  if(Array.isArray(r.data.places) && r.data.places.length){ PLACES = r.data.places.map(p => p.name); PLACE_INFO = Object.fromEntries(r.data.places.map(p => [p.name, p])); }
   const first = !server.loaded;
   server = {loaded:true, editLocked:Boolean(r.data.editLocked), shared:Boolean(r.data.shared), aiReady:Boolean(r.data.aiReady), error:''};
   // 未ログイン（ログイン画面を入力中）のときは描き直さない
@@ -1202,6 +1216,8 @@ function renderSheet(){
   if(sheetMode === 'menu' && sheetId) html = menuSheet();
   if(sheetMode === 'send' && sheetId) html = sendSheet();
   if(sheetMode === 'listing' && sheetId) html = listingSheet();
+  if(sheetMode === 'contact' && sheetId) html = contactSheet();
+  if(sheetMode === 'complete' && sheetId) html = completeSheet();
   if(!html){ closeSheet(); return; }
   const scrollTop = el.querySelector('.sheet')?.scrollTop || 0;
   el.innerHTML = html;
@@ -1253,6 +1269,9 @@ function renderAuth(){
       <div class="field"><label for="a-pw">パスワード${login ? '' : '（8文字以上）'}</label><input id="a-pw" type="password" autocomplete="${login ? 'current-password' : 'new-password'}" maxlength="100" required></div>
       ${!login ? `<div class="field"><label for="a-name">${P ? 'お名前（取引相手に表示）' : '店名（生産者に表示）'}</label><input id="a-name" maxlength="30" placeholder="${P ? '例：山田 花子' : '例：ビストロ北浜'}" required></div>` : ''}
       ${!login && P ? `<div class="field"><label for="a-farm">農家名（出品と取引に表示。あとから変更できません）</label><input id="a-farm" maxlength="30" placeholder="例：森の農園" required></div>` : ''}
+      ${!login ? `<div class="field"><label for="a-phone">電話番号（任意）</label><input id="a-phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="例：06-1234-5678"></div>
+      <div class="field"><label for="a-email">メールアドレス（任意）</label><input id="a-email" type="email" inputmode="email" autocomplete="email" maxlength="100" placeholder="例：info@example.jp"></div>
+      <p class="cap">電話番号・メールアドレスは、マッチングが成立した取引の相手にだけ表示されます。あとから設定で登録・変更できます。</p>` : ''}
       <div id="auth-err"></div>
       <button type="submit" class="btn btn-main" id="auth-submit">${login ? 'ログイン' : '登録して始める'}</button>
       <p class="switch">${login ? `アカウントがない方は <button type="button" class="link" data-auth="signup">新しく登録</button>` : `登録済みの方は <button type="button" class="link" data-auth="login">ログイン</button>`}</p>
@@ -1271,7 +1290,7 @@ async function doAuth(){
   if(authBusy || !authView) return;
   const v = id => ($('#' + id)?.value || '').trim(), {role, mode} = authView;
   const body = mode === 'login' ? {op:'login', loginId:v('a-id'), password:$('#a-pw').value}
-    : {op:'signup', role, loginId:v('a-id'), password:$('#a-pw').value, name:v('a-name'), farm:v('a-farm')};
+    : {op:'signup', role, loginId:v('a-id'), password:$('#a-pw').value, name:v('a-name'), farm:v('a-farm'), phone:v('a-phone'), email:v('a-email')};
   const btn = $('#auth-submit'); authBusy = true; btn.disabled = true; btn.textContent = mode === 'login' ? 'ログインしています…' : '登録しています…';
   let r = null; try { r = await api('/api/auth', body); } catch(e) {}
   authBusy = false;
@@ -1293,6 +1312,13 @@ function signedIn(user, isNew, fromLogin){
   animate = true; save(); render(); window.scrollTo(0,0);
   fetchListings({quiet:true}); fetchDeals();
 }
+async function saveContact(){
+  const btn = $('#ct-save'); if(!btn || btn.disabled) return;
+  btn.disabled = true; btn.textContent = '保存しています…';
+  let r = null; try { r = await api('/api/auth', {op:'contact', phone:$('#ct-phone').value, email:$('#ct-email').value}); } catch(e) {}
+  if(!r || !r.ok){ btn.disabled = false; btn.textContent = '連絡先を保存する'; $('#ct-err').innerHTML = '<div class="msg err">' + h(r ? r.data.error || '保存できませんでした' : '通信できませんでした') + '</div>'; return; }
+  me = r.data.user; render(); toast('連絡先を保存しました。成立した取引の相手に表示されます', null, 'ok');
+}
 async function logout(){
   try { await api('/api/auth', {op:'logout'}); } catch(e) {}
   me = null; deals = []; dealsLoaded = false; S = freshState(); authView = null; closeSheet();
@@ -1303,6 +1329,9 @@ async function logout(){
 const OPEN_ST = ['requested','countered'], LIVE_ST = ['matched','preparing','handed'], END_ST = ['completed','declined','cancelled'];
 // 相手待ちではなく、自分の操作が必要な取引（取りやめ以外の操作ができる）
 const needsMe = d => (d.actions || []).some(a => a !== 'cancel');
+// 「次にやること」の並び：返答が必要な依頼・提案 → 受け取りの確認 → 成立後（連絡・準備）
+const URGENCY = {requested:0, countered:0, handed:1, matched:2, preparing:3};
+const byUrgency = list => [...list].sort((a, b) => (URGENCY[a.status] ?? 9) - (URGENCY[b.status] ?? 9) || b.updatedAt - a.updatedAt);
 const counterpart = d => d.side === 'restaurant' ? `${d.farm}${d.demo ? '（デモ農家）' : ''}` : d.restaurantName;
 const DEAL_FILTERS = {
   todo:['対応が必要', needsMe],
@@ -1314,15 +1343,16 @@ const DEAL_FILTERS = {
 };
 const filtersFor = role => role === 'restaurant' ? ['todo','open','answered','live','history','all'] : ['todo','open','live','history','all'];
 const dealsBy = f => deals.filter(DEAL_FILTERS[f][1]);
-// 状態ラベル：todo（自分の番）・wait（相手待ち）・ok（成立・進行中）・done（完了）・end（お断り・取りやめ）
+// 状態ラベル：仕入れ依頼中（requested）・条件確認中（countered）・マッチング成立（matched）・受け渡し待ち（preparing／handed）・取引完了（completed）
+// 色：todo（自分の番）・wait（相手待ち）・ok（成立・受け渡し待ち）・done（完了）・end（お断り・取りやめ）
 function stLabel(d){
-  const R = d.side === 'restaurant';
+  const mine = needsMe(d);
   return ({
-    requested: R ? ['回答待ち','wait'] : ['新しい依頼','todo'],
-    countered: R ? ['条件変更の提案','todo'] : ['回答待ち','wait'],
-    matched: R ? ['取引成立','ok'] : ['取引成立','todo'],
-    preparing: R ? ['準備中','ok'] : ['準備中','todo'],
-    handed: R ? ['受け取り確認待ち','todo'] : ['受け渡し済み','wait'],
+    requested: ['仕入れ依頼中', mine ? 'todo' : 'wait'],
+    countered: ['条件確認中', mine ? 'todo' : 'wait'],
+    matched: ['マッチング成立', 'ok'],
+    preparing: ['受け渡し待ち', 'ok'],
+    handed: ['受け渡し待ち', d.side === 'restaurant' ? 'todo' : 'ok'],
     completed: ['取引完了','done'],
     declined: ['お断り','end'],
     cancelled: ['取りやめ','end'],
@@ -1337,13 +1367,13 @@ function nextInfo(d){
       : ['新しい仕入れ依頼があります', '「依頼を受ける」と、この条件で取引成立になります。条件が合わなければ変更を提案するか、断ってください。'],
     countered: R ? ['生産者から条件変更の提案が届いています', '変更された条件を確認して、同意するか、条件を出し直してください。同意すると取引成立になります。']
       : ['飲食店からの回答を待っています', '提案した条件に飲食店が同意すると、取引成立になります。'],
-    matched: R ? ['取引が成立しました', `生産者が食材の準備を始めるまでお待ちください。受け渡し：${when}`]
-      : ['取引が成立しました', '食材の準備を始めたら「準備を始める」を押してください。成立しても出品の数量は自動では減りません。'],
-    preparing: R ? ['食材の準備中です', `受け渡し：${when}。受け取ったあとに確認をお願いします。`]
+    matched: R ? ['マッチングが成立しました！', `相手に連絡し、納品日・数量・受け渡し方法を確認してください。受け渡しが済んだら「取引完了」を押してください。予定：${when}`]
+      : ['マッチングが成立しました！', '相手に連絡し、納品日・数量・受け渡し方法を確認してください。食材の準備を始めたら「準備を始める」を押してください。成立しても出品の数量は自動では減りません。'],
+    preparing: R ? ['食材の準備中です', `受け渡し：${when}。受け渡しが済んだら「取引完了」を押してください。`]
       : ['食材を準備してください', `合意した日時・場所で受け渡したら「受け渡しました」を押してください。受け渡し：${when}`],
-    handed: R ? ['食材の受け取りを確認してください', '生産者が受け渡し済みにしました。受け取ったら「受け取りました」を押してください。']
-      : ['飲食店の受け取り確認を待っています', '飲食店が受け取りを確認すると、取引完了になります。'],
-    completed: ['取引が完了しました', d.completedAt ? `${fmtStamp(d.completedAt)} に受け取りが確認されました。` : ''],
+    handed: R ? ['食材の受け取りを確認してください', '生産者が受け渡し済みにしました。受け取ったら「取引完了」を押してください。']
+      : ['飲食店の受け取り確認を待っています', '飲食店が受け渡しの完了を確認すると、取引完了になります。'],
+    completed: ['取引が完了しました！', d.completedAt ? `${fmtStamp(d.completedAt)} に受け渡しの完了が確認されました。` : ''],
     declined: R ? ['生産者がこの依頼をお断りしました', 'ほかの農家さんの在庫で、仕入れ案を作り直せます。'] : ['この依頼はお断りしました', ''],
     cancelled: ['この取引は取りやめになりました', `${by}が取りやめました。`],
   })[d.status] || ['', ''];
@@ -1362,9 +1392,9 @@ const ACT_LABEL = {
   cancel: d => [d.status === 'requested' ? '依頼を取り下げる' : d.status === 'countered' ? '提案を断って取りやめる' : '取引を取りやめる','danger'],
   prepare: () => ['準備を始める','btn-main'],
   handover: () => ['受け渡しました','btn-main'],
-  receive: () => ['受け取りました（取引完了）','btn-main'],
+  receive: () => ['取引完了','btn-main'],
 };
-const ACT_DONE = {accept:'同意しました', counter:'条件の変更を提案しました。相手の回答を待ちます', decline:'依頼をお断りしました', cancel:'取りやめました', prepare:'準備中にしました', handover:'受け渡し済みにしました。飲食店の受け取り確認を待ちます', receive:'受け取りを確認しました。取引が完了しました'};
+const ACT_DONE = {accept:'同意しました', counter:'条件の変更を提案しました。相手の回答を待ちます', decline:'依頼をお断りしました', cancel:'取りやめました', prepare:'準備中にしました', handover:'受け渡し済みにしました。飲食店の受け取り確認を待ちます', receive:'取引が完了しました！'};
 function prevTerms(d){ const ts = d.history.filter(x => x.terms); return ts.length > 1 ? ts[ts.length - 2].terms : null; }
 function dealCard(d){
   const [label, kind] = stLabel(d), [title, sub] = nextInfo(d), t = d.terms, mine = needsMe(d);
@@ -1378,7 +1408,7 @@ function dealCard(d){
   const notes = [d.note ? `<div class="deal-note"><b>飲食店からのメッセージ</b>\n${h(d.note)}</div>` : '',
     ...d.history.filter(x => x.note && x.action !== 'request').slice(-1).map(x => `<div class="deal-note"><b>${x.by === 'restaurant' ? '飲食店' : '生産者'}からのメッセージ</b>\n${h(x.note)}</div>`)].join('');
   const acts = (d.actions || []).map(a => { const [txt, cls] = ACT_LABEL[a](d); return `<button type="button" class="btn ${cls}" data-deal-act="${a}" data-id="${h(d.id)}" ${dealBusy ? 'disabled' : ''}>${txt}</button>`; }).join('');
-  const HIST = {request:'依頼を送信', accept:'同意', counter:'条件の変更を提案', decline:'お断り', cancel:'取りやめ', prepare:'準備を開始', handover:'受け渡し済みにした', receive:'受け取りを確認'};
+  const HIST = {request:'依頼を送信', accept:'同意', counter:'条件の変更を提案', decline:'お断り', cancel:'取りやめ', prepare:'準備を開始', handover:'受け渡し済みにした', receive:'取引完了（受け渡しの完了を確認）'};
   return `<article class="card deal${mine ? ' todo' : ''}" id="deal-${h(d.id)}" style="--t:${tint(d.item)}">
     <div class="top"><div class="face" aria-hidden="true">${art(d.item)}</div>
       <div class="grow"><h3>${h(d.item)}${d.variety ? `<small class="muted" style="font-size:12.5px;margin-left:6px">${h(d.variety)}</small>` : ''}</h3>
@@ -1396,10 +1426,59 @@ function dealCard(d){
       <dt>受け渡し方法</dt><dd${was('place')}>${h(t.place)}で手渡し${before('place', x => placeShort(x.place) + 'で手渡し')}</dd>
     </dl>
     ${notes}
+    ${d.contact ? matchBox(d) : ''}
     ${counterId === d.id ? counterForm(d) : acts ? `<div class="acts">${acts}</div>` : ''}
     ${d.status === 'requested' && d.side === 'producer' && counterId !== d.id ? '<p class="cap">決済・配送はこのアプリでは行いません。受け渡しは合意した日時・場所で、当事者どうしで行います。</p>' : ''}
     <details class="hist"><summary>やりとりの記録（${d.history.length}件）</summary><ol>${d.history.map(x => `<li>${h(fmtStamp(x.at))}　${x.by === 'restaurant' ? '飲食店' : '生産者'}：${HIST[x.action] || h(x.action)}${x.terms ? `（${q(x.terms.qty, d.unit)}・${yen(x.terms.price)}/${h(d.unit)}・${h(fmtDate(x.terms.date))} ${h(x.terms.from)}〜${h(x.terms.to)}・${h(placeShort(x.terms.place))}）` : ''}</li>`).join('')}</ol></details>
   </article>`;
+}
+// マッチング成立後のエリア。連絡先と取引内容はボタンで開く（開いても取引は増えない・連絡済みにもならない）
+function matchBox(d){
+  const done = d.status === 'completed';
+  return `<div class="matchbox${done ? ' done' : ''}">
+    <div class="mb-h"><span aria-hidden="true">${done ? '✅' : '🎉'}</span><b>${done ? '取引完了' : 'マッチング成立'}</b></div>
+    <p>${done ? '取引は完了しています。連絡先と取引内容はいつでも確認できます。' : '相手に連絡し、納品日・数量・受け渡し方法を確認してください。'}</p>
+    <button type="button" class="btn ${done ? 'btn-sub' : 'btn-main'}" data-contact="${h(d.id)}">📞 取引成立・連絡先を確認</button>
+  </div>`;
+}
+const telHref = p => 'tel:' + String(p).replace(/[^\d+]/g, '');
+function contactSheet(){
+  const d = deals.find(x => x.id === sheetId); if(!d || !d.contact) return '';
+  const c = d.contact, t = d.terms, R = d.side === 'restaurant', done = d.status === 'completed';
+  const who = R ? '生産者名' : '店舗名';
+  const subject = encodeURIComponent(`【AI地域商社】${d.item}の取引について（取引No.${d.id.slice(1)}）`);
+  const row = (label, icon, val, href) => `<div class="ct-row"><span class="ct-ic" aria-hidden="true">${icon}</span><div class="grow"><div class="cap">${label}</div>${val ? `<a class="ct-link" href="${h(href)}">${h(val)}</a>` : '<b class="muted">未登録</b>'}</div></div>`;
+  const mineMissing = !me.phone && !me.email;
+  const body = c.demo ? '<div class="msg">デモ農家宛ての取引のため、連絡先はありません。デモ農家は架空のデータで、実際の連絡はできません。</div>'
+    : '<p class="ct-guide">取引の詳細については、以下に連絡してください。</p>'
+      + row('電話番号', '📞', c.phone, telHref(c.phone))
+      + row('メールアドレス', '✉️', c.email, `mailto:${c.email}?subject=${subject}`)
+      + (!c.phone && !c.email ? '<div class="msg warn">相手はまだ連絡先を登録していません。相手が設定画面で登録すると、ここに表示されます。</div>' : '');
+  return sheetFrame(done ? '取引が完了しました' : 'マッチングが成立しました', plainTop(done ? '✅ 取引が完了しました！' : '🎉 マッチングが成立しました！'), `
+    <p class="lead">取引を進めるため、以下の連絡先から相手に連絡し、納品日・数量・受け渡し方法などの詳細をご確認ください。</p>
+    <section class="ct-card">
+      <div class="cap">${who}</div><b class="ct-name">${h(c.name)}${c.demo ? '（デモ農家）' : ''}</b>
+      ${body}
+    </section>
+    <div class="sec-label">合意した取引内容</div>
+    <dl class="deal-terms">
+      <dt>食材</dt><dd>${art(d.item)} ${h(d.item)}${d.variety ? '（' + h(d.variety) + '）' : ''}</dd>
+      <dt>数量</dt><dd>${q(t.qty, d.unit)}</dd>
+      <dt>価格</dt><dd>${yen(t.price)}/${h(d.unit)}・合計 ${yen(Math.round(t.qty * t.price))}（税込）</dd>
+      <dt>納品予定日</dt><dd>${h(fmtDate(t.date))} ${h(t.from)}〜${h(t.to)}</dd>
+      <dt>受け渡し方法</dt><dd>${h(t.place)}で手渡し</dd>
+    </dl>
+    <p class="cap">連絡先を表示しただけでは、連絡したことにはなりません。決済・配送はこのアプリでは行いません。</p>
+    ${mineMissing && !c.demo ? '<p class="cap">あなたの連絡先も未登録です。相手からも連絡できるよう、<button type="button" class="link" data-tab="settings">設定で登録</button>してください。</p>' : ''}
+    ${(d.actions || []).includes('receive') ? `<button type="button" class="btn btn-main" data-deal-act="receive" data-id="${h(d.id)}">取引完了</button><p class="cap" style="text-align:center;margin-top:-6px">食材の受け渡しが済んだら押してください。</p>` : ''}`);
+}
+// 取引完了の確認。受け渡しが済んでいるかを確かめてから状態を更新する
+function completeSheet(){
+  const d = deals.find(x => x.id === sheetId); if(!d) return '';
+  return sheetFrame('取引完了の確認', plainTop('食材の受け渡しが完了しましたか？'), `
+    <p class="lead">取引完了にすると、取引のステータスが更新されます。受け渡しが完了していることを確認してください。</p>
+    <div class="cap">${art(d.item)} ${h(d.item)} ${q(d.terms.qty, d.unit)}・${h(counterpart(d))}</div>
+    <div class="row"><button type="button" class="btn grow" data-close-sheet>キャンセル</button><button type="button" class="btn btn-main grow" id="complete-ok" data-id="${h(d.id)}" ${dealBusy ? 'disabled' : ''}>取引を完了する</button></div>`);
 }
 function counterForm(d){
   const t = d.terms, k = s => `k-${s}-${h(d.id)}`;
@@ -1441,13 +1520,15 @@ async function dealAct(id, action, extra){
   if(!DEAL_FILTERS[dealFilter][1](now)) dealFilter = 'all';
   render();
   document.getElementById('deal-' + id)?.scrollIntoView({block:'nearest'});
-  toast(action === 'accept' && now.status === 'matched' ? '🎉 取引が成立しました' : ACT_DONE[action], null, 'ok');
-  if(action === 'accept' && now.status === 'matched' && !reduceMotion()) confetti();
+  toast(action === 'accept' && now.status === 'matched' ? '🎉 マッチングが成立しました！' : ACT_DONE[action], null, 'ok');
+  // 成立した直後は、操作した側に連絡先と取引内容を開く
+  if(action === 'accept' && now.status === 'matched'){ if(!reduceMotion()) confetti(); sheetMode = 'contact'; sheetId = id; renderSheet(); }
+  if(action === 'receive' && !reduceMotion()) confetti();
 }
 function renderDeals(){
   const R = me.role === 'restaurant', fs = filtersFor(me.role);
   if(!fs.includes(dealFilter)) dealFilter = 'all';
-  const list = dealsBy(dealFilter);
+  const list = dealFilter === 'todo' ? byUrgency(dealsBy('todo')) : dealsBy(dealFilter);
   const empty = !deals.length
     ? (R ? `<section class="card empty"><div class="big">📨</div><p>まだ仕入れ依頼はありません。</p><p class="cap">仕入れ案を作り、「この案で生産者に仕入れ依頼を送る」を押すと、ここで回答や進み具合を確認できます。</p><button type="button" class="btn btn-main" style="width:auto" data-go="find">仕入れ案を作る →</button></section>`
        : `<section class="card empty"><div class="big">📨</div><p>まだ仕入れ依頼は届いていません。</p><p class="cap">出品すると、飲食店の仕入れ案に使われ、依頼が届くとここに表示されます。</p><button type="button" class="btn btn-main" style="width:auto" data-go="sell">販売できるものを登録 ＋</button></section>`)
@@ -1491,12 +1572,8 @@ async function sendRequests(btn){
 
 /* ---------- 食材を探す（飲食店）：スワイプで1枚ずつ見るデッキと一覧（デッキは10/16版から移植） ---------- */
 // いいね・スキップは「気になる食材の印」だけで、注文・在庫予約・生産者への連絡ではない。いいねはこの端末にアカウントごとに保存する
-// 受け渡し拠点のおおよその位置（町名からの参考値。正確な建物の住所ではない）
-const PLACE_COORDS = {
-  '拠点P（豊中・共通受渡拠点）': { lat: 34.78, lng: 135.47 },
-  '拠点Q（能勢・道の駅）': { lat: 34.95, lng: 135.47 },
-  '亀岡集荷所': { lat: 35.01, lng: 135.58 },
-};
+// 受け渡し拠点のおおよその位置（サーバーの拠点設定の値。正確な建物の住所ではない）
+const placeCoords = name => { const p = PLACE_INFO[name]; return p && p.lat != null && p.lng != null ? p : null; };
 // 2点間のおおよその距離（km）。Haversine公式
 function distanceKm(a, b){
   const R = 6371, toRad = d => d * Math.PI / 180;
@@ -1508,7 +1585,7 @@ function distanceKm(a, b){
 let marcheItem = '', marcheRegion = '', marcheIdx = 0, browseView = 'swipe', myCoords = null, geoStatus = 'idle';
 function placeDistText(place){
   if(!myCoords) return null;
-  const c = PLACE_COORDS[place];
+  const c = placeCoords(place);
   if(!c) return null;
   const km = distanceKm(myCoords, c);
   return `${placeShort(place)}まで約${km < 10 ? km.toFixed(1) : Math.round(km)}km`;
@@ -1517,7 +1594,7 @@ function placeDistText(place){
 function marcheList(){
   let list = openListings().filter(l => (!marcheItem || l.item === marcheItem) && (!marcheRegion || (REGION_GROUPS[marcheRegion] || []).includes(l.region)));
   if(myCoords){
-    const dist = l => PLACE_COORDS[l.place] ? distanceKm(myCoords, PLACE_COORDS[l.place]) : Infinity;
+    const dist = l => placeCoords(l.place) ? distanceKm(myCoords, placeCoords(l.place)) : Infinity;
     list = [...list].sort((a,b) => dist(a) - dist(b));
   }
   return list;
@@ -1696,7 +1773,7 @@ const tile = (emo, t, s, attr, n) => `<button type="button" class="tile" ${attr}
 const nOf = f => dealsBy(f).length;
 function renderHome(){
   if(S.plan) refreshPlan();
-  const R = me.role === 'restaurant', open = openListings(), todo = dealsBy('todo');
+  const R = me.role === 'restaurant', open = openListings(), todo = byUrgency(dealsBy('todo'));
   const greet = firstVisit ? 'はじめまして 👋' : 'おかえりなさい ☺️';
   const chip = `<p class="role-chip">${R ? '🍽️' : '🌾'} ${h(R ? me.name : me.farm)}（${ROLE_LABEL[me.role]}）</p>`;
   const hello = `<section class="hello">
@@ -2192,6 +2269,15 @@ function renderSettings(){
       <p class="cap">利用者の種類は取引の記録と結びついているため、あとから変更できません。もう一方として使うときは、別のアカウントを登録してください。</p>
       <button type="button" class="btn" id="logout">ログアウト</button>
     </section>
+    <form class="card" id="contact-form" novalidate>
+      <h2 class="sec-title">📞 連絡先</h2>
+      <p class="muted">マッチングが成立した取引の相手にだけ表示されます。取引の詳細（納品日・数量・受け渡し方法）の確認に使われます。</p>
+      <div class="field"><label for="ct-phone">電話番号（任意）</label><input id="ct-phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" value="${h(me.phone)}" placeholder="例：06-1234-5678"></div>
+      <div class="field"><label for="ct-email">メールアドレス（任意）</label><input id="ct-email" type="email" inputmode="email" autocomplete="email" maxlength="100" value="${h(me.email)}" placeholder="例：info@example.jp"></div>
+      <div id="ct-err"></div>
+      <button type="submit" class="btn btn-sub" id="ct-save">連絡先を保存する</button>
+      ${!me.phone && !me.email ? '<p class="cap">連絡先が未登録のため、取引の相手には「未登録」と表示されます。</p>' : ''}
+    </form>
     <section class="card">
       <h2 class="sec-title">🧺 このアプリでできること</h2>
       <p class="muted">飲食店の仕入れの希望と、生産者が登録した在庫を照らし合わせて仕入れ案を作り、生産者に仕入れ依頼を送れます。生産者は依頼を受ける・断る・条件の変更を提案でき、双方が同じ条件に同意すると取引成立です。成立後は、準備・受け渡し・受け取り確認までの進み具合を双方で記録できます。</p>
@@ -2261,6 +2347,10 @@ document.addEventListener('click', ev => {
   // 取引
   if(ds.deals){ dealFilter = ds.deals; return go('deals'); }
   if(ds.filter){ dealFilter = ds.filter; counterId = null; render(); return; }
+  if(ds.contact){ sheetMode = 'contact'; sheetId = ds.contact; renderSheet(); return; }
+  if(id === 'complete-ok'){ closeSheet(); return dealAct(ds.id, 'receive'); }
+  // 取引完了は確認ダイアログを経てから
+  if(ds.dealAct === 'receive'){ sheetMode = 'complete'; sheetId = ds.id; renderSheet(); return; }
   if(ds.dealAct){
     if(ds.dealAct === 'counter'){ counterId = ds.id; render(); document.getElementById('deal-' + ds.id)?.scrollIntoView({block:'start'}); return; }
     if((ds.dealAct === 'decline' || ds.dealAct === 'cancel') && !armed(t, ds.dealAct === 'decline' ? 'もう一度押すと断ります' : 'もう一度押すと取りやめます')) return;
@@ -2477,6 +2567,7 @@ document.addEventListener('keydown', ev => {
 document.addEventListener('submit', ev => {
   const f = ev.target;
   if(f.id === 'auth-form'){ ev.preventDefault(); return doAuth(); }
+  if(f.id === 'contact-form'){ ev.preventDefault(); return saveContact(); }
   if(f.dataset.counterForm){
     ev.preventDefault();
     const id = f.dataset.counterForm, v = k => (document.getElementById(`k-${k}-${id}`) || {}).value || '';

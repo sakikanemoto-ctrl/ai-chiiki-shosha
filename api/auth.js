@@ -3,11 +3,12 @@
 // POST /api/auth {op:'login', loginId, password}                       ログイン
 // POST /api/auth {op:'logout'}                                         ログアウト
 // POST /api/auth {op:'setRole', role, farm?}   役割が未設定のユーザーだけが一度だけ設定できる（設定済みの役割は変えない）
+// POST /api/auth {op:'contact', phone, email}  自分の連絡先（任意）を登録・変更する。取引が成立した相手にだけ表示される
 
 import { allow, setJSON } from '../lib/store.js';
 import { KEY, load } from '../lib/inventory.js';
 import {
-  ROLES, hashPassword, checkPassword, getUserById, saveUser, newUserId, userIdByLogin,
+  ROLES, checkContact, hashPassword, checkPassword, getUserById, saveUser, newUserId, userIdByLogin,
   claimLogin, claimFarm, releaseLogin, publicUser, startSession, endSession, currentUser,
 } from '../lib/auth.js';
 
@@ -60,6 +61,8 @@ export default async function handler(req, res) {
       if (!name) errors.push(b.role === 'producer' ? 'お名前を30文字以内で入力してください' : '店名を30文字以内で入力してください');
       const farm = b.role === 'producer' ? text(b.farm, 30) : null;
       if (b.role === 'producer' && !farm) errors.push('農家名を30文字以内で入力してください');
+      const contact = checkContact(b.phone, b.email);
+      errors.push(...contact.errors);
       if (errors.length) return send(res, 400, { error: errors[0], errors });
 
       const uid = await newUserId();
@@ -69,9 +72,19 @@ export default async function handler(req, res) {
         if (err) { await releaseLogin(loginId); return send(res, 409, { error: err }); }
       }
       const { salt, hash } = hashPassword(b.password);
-      const user = { id: uid, loginId, name, role: b.role, farm, salt, hash, createdAt: Date.now() };
+      const user = { id: uid, loginId, name, role: b.role, farm, phone: contact.phone, email: contact.email, salt, hash, createdAt: Date.now() };
       await saveUser(user);
       await startSession(req, res, uid);
+      return send(res, 200, { user: publicUser(user) });
+    }
+
+    if (b.op === 'contact') {
+      const user = await currentUser(req);
+      if (!user) return send(res, 401, { error: 'ログインしてください', needLogin: true });
+      const contact = checkContact(b.phone, b.email);
+      if (contact.errors.length) return send(res, 400, { error: contact.errors[0], errors: contact.errors });
+      user.phone = contact.phone; user.email = contact.email; user.updatedAt = Date.now();
+      await saveUser(user);
       return send(res, 200, { user: publicUser(user) });
     }
 

@@ -8,6 +8,7 @@ import { seedListings, validateListing } from '../lib/domain.js';
 import { KEY, load } from '../lib/inventory.js';
 import { aiReady } from '../lib/ai.js';
 import { currentUser } from '../lib/auth.js';
+import { publicPlaces } from '../lib/places.js';
 
 const MAX_LISTINGS = 300;
 const PASSCODE = process.env.EDIT_PASSCODE || '';
@@ -28,7 +29,7 @@ export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const st = await load(), user = await currentUser(req);
-      return send(res, 200, { ...payload(st, user), editLocked: Boolean(PASSCODE), shared: hasRedis, aiReady: aiReady() });
+      return send(res, 200, { ...payload(st, user), editLocked: Boolean(PASSCODE), shared: hasRedis, aiReady: aiReady(), places: publicPlaces() });
     }
     if (req.method !== 'POST') return send(res, 405, { error: '使えない操作です' });
 
