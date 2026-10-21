@@ -3,7 +3,7 @@
 // AIが返すのは「読み取り結果」だけ。在庫・価格・配分はここでは扱わない。
 
 import { allow } from '../lib/store.js';
-import { ITEMS, UNITS, REGION_GROUPS, PLACES, todayJST } from '../lib/domain.js';
+import { ITEMS, UNITS, REGION_GROUPS, todayJST } from '../lib/domain.js';
 import { generate, aiReady, AIError, STATUS } from '../lib/ai.js';
 
 const MAX_CHARS = 200;
@@ -24,12 +24,11 @@ const SCHEMA = {
     region: str({ enum: REGIONS }),
     maxPrice: { type: 'number', nullable: true },
     allowOff: { type: 'boolean', nullable: true },
-    place: str({ enum: PLACES }),
     outOfScope: str({ enum: SCOPES }),
     unreadable: { type: 'boolean' },
   },
-  required: ['item', 'qty', 'unit', 'deadline', 'dateMode', 'region', 'maxPrice', 'allowOff', 'place', 'outOfScope', 'unreadable'],
-  propertyOrdering: ['item', 'qty', 'unit', 'deadline', 'dateMode', 'region', 'maxPrice', 'allowOff', 'place', 'outOfScope', 'unreadable'],
+  required: ['item', 'qty', 'unit', 'deadline', 'dateMode', 'region', 'maxPrice', 'allowOff', 'outOfScope', 'unreadable'],
+  propertyOrdering: ['item', 'qty', 'unit', 'deadline', 'dateMode', 'region', 'maxPrice', 'allowOff', 'outOfScope', 'unreadable'],
 };
 
 const SYSTEM = `あなたは、飲食店が書いた仕入れの希望文を決められた項目に整理する係です。
@@ -41,7 +40,6 @@ const SYSTEM = `あなたは、飲食店が書いた仕入れの希望文を決�
 - region: 地域の候補から選ぶ。書かれていなければ null。
 - maxPrice: 1単位あたりの税込上限（円）。総額の予算しか書かれていなければ null。
 - allowOff: 「形が悪くてもOK」「規格外可」なら true、「規格外は不可」「形のきれいなもの」なら false、言及がなければ null。
-- place: 受渡場所の候補から選ぶ。書かれていなければ null。
 - outOfScope: 家庭用・個人の購入なら "personal"、全国配送や発送の依頼なら "nationwide"、2品目以上を頼んでいれば "multi"、それ以外は null。
 - unreadable: 仕入れの希望として読めない文なら true。
 
@@ -63,7 +61,6 @@ function clean(p) {
     region: oneOf(p.region, REGIONS),
     maxPrice: num(p.maxPrice, 100000),
     allowOff: typeof p.allowOff === 'boolean' ? p.allowOff : null,
-    place: oneOf(p.place, PLACES),
     outOfScope: oneOf(p.outOfScope, SCOPES),
     unreadable: p.unreadable === true,
   };

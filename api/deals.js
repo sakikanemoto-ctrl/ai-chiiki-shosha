@@ -10,7 +10,7 @@ import { getRaw, mgetRaw, setNX, setRaw, incr, sadd, smembers, casRaw } from '..
 import { load } from '../lib/inventory.js';
 import { todayJST } from '../lib/domain.js';
 import { currentUser, userIdByFarm } from '../lib/auth.js';
-import { sideOf, apply, view, checkTerms, withCurrentPlaces, CONTACT_ST } from '../lib/deals.js';
+import { sideOf, apply, view, checkTerms, withoutPlace, CONTACT_ST } from '../lib/deals.js';
 
 function send(res, status, body) {
   res.setHeader('Cache-Control', 'no-store');
@@ -70,7 +70,7 @@ async function createRequest(user, b) {
       out.push({ listingId: l.id, farm: l.farm, id: await getRaw(lock), duplicate: true });
       continue;
     }
-    const terms = { qty, price: l.price, date: l.date, from: l.from, to: l.to, place: l.place };
+    const terms = { qty, price: l.price, date: l.date, from: l.from, to: l.to };
     if (checkTerms(terms).length) { out.push({ listingId: l.id, farm: l.farm, error: '出品の受け渡し条件が不完全なため、依頼を送れません' }); continue; }
     const now = Date.now();
     const deal = {
@@ -115,8 +115,8 @@ export default async function handler(req, res) {
       // 当事者でなければ、取引があるかどうかも知らせない
       if (!side) return send(res, 404, { error: '取引が見つかりません' });
       if (Number(b.v) !== deal.v) return send(res, 409, { error: 'この取引は、ほかの操作ですでに更新されています。最新の状態を表示しました', deal: await viewWithContact(deal, side) });
-      // 拠点の名前が変わっていれば、新しい名前で条件を確認・保存する
-      const r = apply(withCurrentPlaces(deal), side, String(b.action || ''), { terms: b.terms, note: b.note });
+      // 以前の取引に残っている受け渡し場所は外してから確認・保存する
+      const r = apply(withoutPlace(deal), side, String(b.action || ''), { terms: b.terms, note: b.note });
       if (r.error) return send(res, r.status, { error: r.error, errors: r.errors, deal: await viewWithContact(deal, side) });
       if (!(await casRaw(key, raw, JSON.stringify(r.deal)))) {
         const now = JSON.parse(await getRaw(key));

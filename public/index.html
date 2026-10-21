@@ -758,8 +758,8 @@ const REGION_GROUPS = {
   '兵庫県':['兵庫県']
 };
 const FARM_REGIONS = ['能勢・豊能','北摂','大阪市','北河内','中河内','南河内','泉州','京都府','兵庫県','奈良県'];
-// 受け渡し拠点はサーバーの設定（lib/places.js または環境変数 PLACES_JSON）から /api/listings で受け取る。ここに名前を書かない
-let PLACES = [], PLACE_INFO = {};
+// 受け渡し場所（拠点）は扱わない。受け渡しの方法は、マッチング成立後に電話・メールで当事者どうしが相談して決める
+const HANDOFF = '成立後に、電話・メールで相手と相談して決めます';
 const OFF_REASONS = ['形の不揃い','サイズ不揃い','色むら','軽い表面傷'];
 const TABS = ['home','shop','browse','farm','deals','records','settings'];
 // 利用者の種類ごとのタブ。種類はログイン中のアカウント（サーバーに保存）で決まる
@@ -800,7 +800,6 @@ const h = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;'
 const yen = n => n.toLocaleString('ja-JP') + '円';
 const q = (n,u) => `${+(+n).toFixed(1)}${u}`;
 const opt = (list, sel, blank) => (blank!=null?`<option value="">${h(blank)}</option>`:'') + list.map(v => `<option${v===sel?' selected':''}>${h(v)}</option>`).join('');
-const placeShort = p => (PLACE_INFO[p] && PLACE_INFO[p].short) || String(p).replace(/（.*）/, '');
 const pageHead = (title, lead) => `<header class="page-h"><h1 class="page-title">${title}</h1>${lead ? `<p class="lead">${h(lead)}</p>` : ''}</header>`;
 const lowStock = l => l.qty <= Math.max(2 * l.minQty, 2);
 const reduceMotion = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -860,7 +859,6 @@ async function fetchListings(opts){
   try { r = await api('/api/listings'); } catch(e) {}
   if(!r || !r.ok){ server.error = 'データを読み込めませんでした。通信状態を確かめて、もう一度読み込んでください。'; if(!opts?.quiet || !server.loaded) render(); return; }
   applyData(r.data);
-  if(Array.isArray(r.data.places) && r.data.places.length){ PLACES = r.data.places.map(p => p.name); PLACE_INFO = Object.fromEntries(r.data.places.map(p => [p.name, p])); }
   const first = !server.loaded;
   server = {loaded:true, editLocked:Boolean(r.data.editLocked), shared:Boolean(r.data.shared), aiReady:Boolean(r.data.aiReady), error:''};
   // 未ログイン（ログイン画面を入力中）のときは描き直さない
@@ -902,11 +900,11 @@ function reasonsFor(l, r){
   if(r.region && !(REGION_GROUPS[r.region]||[]).includes(l.region)) out.push(`地域が対象外（${l.region}）`);
   if(l.grade === '規格外' && !r.allowOff) out.push(`規格外（${l.reason}）は含めない指定`);
   if(r.maxPrice != null && l.price > r.maxPrice) out.push(`単価${yen(l.price)}が上限を超える`);
-  if(r.place && l.place !== r.place) out.push(`受渡場所が違う（${l.place}）`);
   if(l.active && l.qty > 0 && l.minQty > l.qty) out.push('在庫が最低販売量に届かない');
   return out;
 }
-const slotKey = l => `${l.date}|${l.from}-${l.to}|${l.place}`;
+// 1つの仕入れ案にまとめるのは、受け渡し日と時間が同じ出品
+const slotKey = l => `${l.date}|${l.from}-${l.to}`;
 const better = (a,b) => a.n !== b.n ? a.n < b.n : a.cost !== b.cost ? a.cost < b.cost : a.key < b.key;
 function solve(ls, T, key){
   let dp = new Map([[0,{n:0,cost:0,picks:[],key}]]);
@@ -976,7 +974,6 @@ function suggest(r){
   if(!r.allowOff) tries.push(['規格外も含める', {allowOff:true}]);
   if(r.region) tries.push(['地域の指定を外す', {region:''}]);
   if(r.maxPrice != null) tries.push(['単価の上限を外す', {maxPrice:null}]);
-  if(r.place) tries.push(['受渡場所の指定を外す', {place:''}]);
   if(r.dateMode === 'on') tries.push([`${fmtDate(r.deadline)}までの受渡しに広げる`, {dateMode:'by'}]);
   tries.push([`希望日を${fmtDate(shiftISO(r.deadline,1))}${r.dateMode==='by'?'まで':''}にする`, {deadline:shiftISO(r.deadline,1)}]);
   const out = [];
@@ -1015,7 +1012,7 @@ function ruleParse(text){
   else if(items.length > 1) out = 'multi';
   return {item: items[0] || null, qty: m ? +m[1] : null, unit: m ? m[2].toLowerCase() : null, deadline,
     dateMode: deadline ? (/まで|以内/.test(t) ? 'by' : 'on') : null, region, maxPrice: pm ? +pm[1] : null,
-    allowOff, place:null, outOfScope:out, unreadable: !items.length && !m};
+    allowOff, outOfScope:out, unreadable: !items.length && !m};
 }
 function clean(p){
   p = p || {};
@@ -1030,7 +1027,6 @@ function clean(p){
     maxPrice: num(p.maxPrice),
     allowOff: p.allowOff === true,
     allowOffStated: p.allowOff === true || p.allowOff === false,
-    place: PLACES.includes(p.place) ? p.place : '',
     outOfScope: ['personal','nationwide','multi'].includes(p.outOfScope) ? p.outOfScope : null,
     unreadable: p.unreadable === true
   };
@@ -1112,7 +1108,7 @@ function previewCard(l){
       <h3>${h(l.item)}${l.variety ? `<small>${h(l.variety)}</small>` : ''}</h3>
       <div class="where">${whereLine(l)}</div>
       <div class="pr"><b>¥${l.price.toLocaleString('ja-JP')}<span class="cap">/${h(l.unit)}</span></b><span class="left ${lowStock(l)?'hot':''}">残り${q(l.qty,l.unit)}</span></div>
-      <div class="hand">🧺 ${h(fmtDate(l.date))}・${h(placeShort(l.place))}</div>
+      <div class="hand">🧺 ${h(fmtDate(l.date))} ${h(l.from || '')}〜${h(l.to || '')}</div>
     </div>
   </article>`;
 }
@@ -1360,7 +1356,7 @@ function stLabel(d){
 }
 // 今の状態と、次に必要な操作（実際の状態から決める）
 function nextInfo(d){
-  const R = d.side === 'restaurant', t = d.terms, when = `${fmtDate(t.date)} ${t.from}〜${t.to}・${placeShort(t.place)}`;
+  const R = d.side === 'restaurant', t = d.terms, when = `${fmtDate(t.date)} ${t.from}〜${t.to}`;
   const by = d.cancelledBy === d.side ? 'あなた' : (R ? '生産者' : '飲食店');
   return ({
     requested: R ? ['生産者からの回答を待っています', '生産者が依頼を受けるか、断るか、条件の変更を提案します。まだ取引は成立していません。']
@@ -1370,7 +1366,7 @@ function nextInfo(d){
     matched: R ? ['マッチングが成立しました！', `相手に連絡し、納品日・数量・受け渡し方法を確認してください。受け渡しが済んだら「取引完了」を押してください。予定：${when}`]
       : ['マッチングが成立しました！', '相手に連絡し、納品日・数量・受け渡し方法を確認してください。食材の準備を始めたら「準備を始める」を押してください。成立しても出品の数量は自動では減りません。'],
     preparing: R ? ['食材の準備中です', `受け渡し：${when}。受け渡しが済んだら「取引完了」を押してください。`]
-      : ['食材を準備してください', `合意した日時・場所で受け渡したら「受け渡しました」を押してください。受け渡し：${when}`],
+      : ['食材を準備してください', `飲食店と相談して決めた方法で受け渡したら「受け渡しました」を押してください。受け渡し：${when}`],
     handed: R ? ['食材の受け取りを確認してください', '生産者が受け渡し済みにしました。受け取ったら「取引完了」を押してください。']
       : ['飲食店の受け取り確認を待っています', '飲食店が受け渡しの完了を確認すると、取引完了になります。'],
     completed: ['取引が完了しました！', d.completedAt ? `${fmtStamp(d.completedAt)} に受け渡しの完了が確認されました。` : ''],
@@ -1423,13 +1419,13 @@ function dealCard(d){
       <dt>単価</dt><dd${was('price')}>${yen(t.price)}/${h(d.unit)}（税込）${before('price', x => yen(x.price))}</dd>
       <dt>合計</dt><dd>${yen(Math.round(t.qty * t.price))}</dd>
       <dt>受け渡し日</dt><dd${was('date') || was('from') || was('to')}>${h(fmtDate(t.date))} ${h(t.from)}〜${h(t.to)}${pt && (pt.date !== t.date || pt.from !== t.from || pt.to !== t.to) ? `<span class="cap">（変更前：${h(fmtDate(pt.date))} ${h(pt.from)}〜${h(pt.to)}）</span>` : ''}</dd>
-      <dt>受け渡し方法</dt><dd${was('place')}>${h(t.place)}で手渡し${before('place', x => placeShort(x.place) + 'で手渡し')}</dd>
+      <dt>受け渡し方法</dt><dd>${d.contact ? '下の「取引成立・連絡先を確認」の電話・メールで、相手と相談して決めてください' : HANDOFF}</dd>
     </dl>
     ${notes}
     ${d.contact ? matchBox(d) : ''}
     ${counterId === d.id ? counterForm(d) : acts ? `<div class="acts">${acts}</div>` : ''}
-    ${d.status === 'requested' && d.side === 'producer' && counterId !== d.id ? '<p class="cap">決済・配送はこのアプリでは行いません。受け渡しは合意した日時・場所で、当事者どうしで行います。</p>' : ''}
-    <details class="hist"><summary>やりとりの記録（${d.history.length}件）</summary><ol>${d.history.map(x => `<li>${h(fmtStamp(x.at))}　${x.by === 'restaurant' ? '飲食店' : '生産者'}：${HIST[x.action] || h(x.action)}${x.terms ? `（${q(x.terms.qty, d.unit)}・${yen(x.terms.price)}/${h(d.unit)}・${h(fmtDate(x.terms.date))} ${h(x.terms.from)}〜${h(x.terms.to)}・${h(placeShort(x.terms.place))}）` : ''}</li>`).join('')}</ol></details>
+    ${d.status === 'requested' && d.side === 'producer' && counterId !== d.id ? '<p class="cap">決済・配送はこのアプリでは行いません。受け渡しの方法は、成立後に電話・メールで飲食店と相談して決めます。</p>' : ''}
+    <details class="hist"><summary>やりとりの記録（${d.history.length}件）</summary><ol>${d.history.map(x => `<li>${h(fmtStamp(x.at))}　${x.by === 'restaurant' ? '飲食店' : '生産者'}：${HIST[x.action] || h(x.action)}${x.terms ? `（${q(x.terms.qty, d.unit)}・${yen(x.terms.price)}/${h(d.unit)}・${h(fmtDate(x.terms.date))} ${h(x.terms.from)}〜${h(x.terms.to)}）` : ''}</li>`).join('')}</ol></details>
   </article>`;
 }
 // マッチング成立後のエリア。連絡先と取引内容はボタンで開く（開いても取引は増えない・連絡済みにもならない）
@@ -1466,7 +1462,7 @@ function contactSheet(){
       <dt>数量</dt><dd>${q(t.qty, d.unit)}</dd>
       <dt>価格</dt><dd>${yen(t.price)}/${h(d.unit)}・合計 ${yen(Math.round(t.qty * t.price))}（税込）</dd>
       <dt>納品予定日</dt><dd>${h(fmtDate(t.date))} ${h(t.from)}〜${h(t.to)}</dd>
-      <dt>受け渡し方法</dt><dd>${h(t.place)}で手渡し</dd>
+      <dt>受け渡し方法</dt><dd>上の連絡先（電話・メール）で相手と相談して決めてください</dd>
     </dl>
     <p class="cap">連絡先を表示しただけでは、連絡したことにはなりません。決済・配送はこのアプリでは行いません。</p>
     ${mineMissing && !c.demo ? '<p class="cap">あなたの連絡先も未登録です。相手からも連絡できるよう、<button type="button" class="link" data-tab="settings">設定で登録</button>してください。</p>' : ''}
@@ -1488,7 +1484,6 @@ function counterForm(d){
       <div class="field"><label for="${k('qty')}">数量（${h(d.unit)}）</label><input id="${k('qty')}" type="number" inputmode="decimal" min="0.1" max="999" step="0.1" value="${t.qty}"></div>
       <div class="field"><label for="${k('price')}">単価（円/${h(d.unit)}・税込）</label><input id="${k('price')}" type="number" inputmode="numeric" min="1" max="100000" value="${t.price}"></div>
       <div class="field"><label for="${k('date')}">受け渡し日</label><input id="${k('date')}" type="date" min="${iso(today0())}" value="${h(t.date)}"></div>
-      <div class="field"><label for="${k('place')}">受け渡し場所</label><select id="${k('place')}">${opt(PLACES, t.place)}</select></div>
       <div class="field"><label for="${k('from')}">時間（から）</label><input id="${k('from')}" type="time" value="${h(t.from)}"></div>
       <div class="field"><label for="${k('to')}">時間（まで）</label><input id="${k('to')}" type="time" value="${h(t.to)}"></div>
       <div class="field full"><label for="${k('note')}">メッセージ（任意・200文字まで）</label><textarea id="${k('note')}" maxlength="200" rows="2" placeholder="例：1.5kgなら明日お渡しできます"></textarea></div>
@@ -1536,7 +1531,7 @@ function renderDeals(){
   $('#app').innerHTML = `${pageHead('取引 🤝', R ? '送った仕入れ依頼への回答、条件の相談、成立後の準備・受け渡しの進み具合を確認できます。' : '飲食店からの仕入れ依頼に回答し、成立後の準備・受け渡しを記録します。')}
     <div class="deal-filters" role="group" aria-label="取引の絞り込み">${fs.map(f => `<button type="button" class="chip" data-filter="${f}" aria-pressed="${f === dealFilter}">${DEAL_FILTERS[f][0]}（${dealsBy(f).length}）</button>`).join('')}</div>
     ${!dealsLoaded ? '<p class="cap">読み込み中…</p>' : list.length ? `<div class="lst">${list.map(dealCard).join('')}</div>` : empty}
-    <p class="cap">このアプリは決済・配送・在庫の確保を行いません。受け渡しは、合意した日時・場所で当事者どうしが行います。取引が成立しても、出品の数量は自動では減りません。</p>`;
+    <p class="cap">このアプリは決済・配送・在庫の確保を行いません。受け渡しの方法は、マッチング成立後に電話・メールで相手と相談して決めます。取引が成立しても、出品の数量は自動では減りません。</p>`;
 }
 
 /* ---------- 仕入れ依頼を送る（仕入れ案から） ---------- */
@@ -1548,7 +1543,7 @@ function sendSheet(){
   const demo = rows.some(x => x.l.demo);
   return sheetFrame('仕入れ依頼を送る', plainTop('📨 仕入れ依頼を送る'), `
     <p class="muted">次の${rows.length}軒の生産者に、それぞれ仕入れ依頼を送ります。</p>
-    <ul class="lines">${rows.map(({k, l}) => `<li><span>👨‍🌾 ${h(k.farm)}${l.demo ? '（デモ農家）' : ''}<br><span class="cap">${h(fmtDate(l.date))} ${h(l.from)}〜${h(l.to)}・${h(placeShort(l.place))}</span></span><span>${q(k.amt, u)} × ${yen(l.price)}<br><b>${yen(k.cost)}</b></span></li>`).join('')}</ul>
+    <ul class="lines">${rows.map(({k, l}) => `<li><span>👨‍🌾 ${h(k.farm)}${l.demo ? '（デモ農家）' : ''}<br><span class="cap">${h(fmtDate(l.date))} ${h(l.from)}〜${h(l.to)}</span></span><span>${q(k.amt, u)} × ${yen(l.price)}<br><b>${yen(k.cost)}</b></span></li>`).join('')}</ul>
     ${P.result.status !== 'ok' ? `<div class="msg warn">希望${q(P.req.qty, u)}に足りない分は含まれていません。いま揃う${q(pick.total, u)}分だけを依頼します。</div>` : ''}
     <div class="field"><label for="send-note">生産者へのメッセージ（任意・200文字まで）</label><textarea id="send-note" maxlength="200" rows="2" placeholder="例：ランチ用です。午前中の受け取りを希望します"></textarea></div>
     <div class="msg"><b>依頼を送っただけでは、取引は成立しません。</b><br>生産者が内容を確認して「受ける」と取引成立になります。生産者が数量や日時の変更を提案することもあります。決済・配送はこのアプリでは行いません。</div>
@@ -1572,36 +1567,14 @@ async function sendRequests(btn){
 
 /* ---------- 食材を探す（飲食店）：スワイプで1枚ずつ見るデッキと一覧（デッキは10/16版から移植） ---------- */
 // いいね・スキップは「気になる食材の印」だけで、注文・在庫予約・生産者への連絡ではない。いいねはこの端末にアカウントごとに保存する
-// 受け渡し拠点のおおよその位置（サーバーの拠点設定の値。正確な建物の住所ではない）
-const placeCoords = name => { const p = PLACE_INFO[name]; return p && p.lat != null && p.lng != null ? p : null; };
-// 2点間のおおよその距離（km）。Haversine公式
-function distanceKm(a, b){
-  const R = 6371, toRad = d => d * Math.PI / 180;
-  const dLat = toRad(b.lat - a.lat), dLng = toRad(b.lng - a.lng);
-  const x = Math.sin(dLat/2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng/2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
-}
-// browseView：'swipe'（1枚ずつ）／'list'（一覧）。geoStatus：'idle' | 'loading' | 'ok' | 'denied' | 'unsupported'
-let marcheItem = '', marcheRegion = '', marcheIdx = 0, browseView = 'swipe', myCoords = null, geoStatus = 'idle';
-function placeDistText(place){
-  if(!myCoords) return null;
-  const c = placeCoords(place);
-  if(!c) return null;
-  const km = distanceKm(myCoords, c);
-  return `${placeShort(place)}まで約${km < 10 ? km.toFixed(1) : Math.round(km)}km`;
-}
-// 絞り込み（食材・地域）に合う公開中の出品。現在地を使うときは近い順
+// browseView：'swipe'（1枚ずつ）／'list'（一覧）
+let marcheItem = '', marcheRegion = '', marcheIdx = 0, browseView = 'swipe';
+// 絞り込み（食材・地域）に合う公開中の出品
 function marcheList(){
-  let list = openListings().filter(l => (!marcheItem || l.item === marcheItem) && (!marcheRegion || (REGION_GROUPS[marcheRegion] || []).includes(l.region)));
-  if(myCoords){
-    const dist = l => placeCoords(l.place) ? distanceKm(myCoords, placeCoords(l.place)) : Infinity;
-    list = [...list].sort((a,b) => dist(a) - dist(b));
-  }
-  return list;
+  return openListings().filter(l => (!marcheItem || l.item === marcheItem) && (!marcheRegion || (REGION_GROUPS[marcheRegion] || []).includes(l.region)));
 }
 // 背後のカードも同じ構造で描画してCSSで隠す。前面に昇格するときはクラスを外すだけでよく、作り直さずに滑らかに動かせる
 function swipeCard(l, behind){
-  const dist = placeDistText(l.place);
   return `<article class="swipe-card${behind ? ' behind' : ''}" style="--t:${tint(l.item)}" data-swipe-id="${h(l.id)}"${behind ? ' aria-hidden="true"' : ' tabindex="0" aria-label="' + h(`${l.item} ${l.farm}。Enterキーで詳細`) + '"'}>
     <div class="img produce">${thumb(l)}<div class="tags">${prodTags(l)}</div>
       <div class="swipe-stamp like" data-stamp="like">いいね</div><div class="swipe-stamp skip" data-stamp="skip">スキップ</div><span class="peek" aria-hidden="true">タップで詳細</span>
@@ -1614,7 +1587,7 @@ function swipeCard(l, behind){
         <div><dt>販売可能量</dt><dd class="${lowStock(l)?'hot':''}"><span class="num">${+(+l.qty).toFixed(1)}</span><small>${h(l.unit)}</small></dd></div>
         <div><dt>受け渡し</dt><dd>${h(fmtDate(l.date))}</dd></div>
       </dl>
-      <div class="dist">🧺 ${h(placeShort(l.place))}${dist ? `・${h(dist)}` : ''}</div>
+      <div class="dist">🧺 受け渡し ${h(fmtDate(l.date))} ${h(l.from)}〜${h(l.to)}</div>
     </div>
   </article>`;
 }
@@ -1675,12 +1648,13 @@ function openListingSheet(id){ if(!id || !byId(id)) return; sheetMode = 'listing
 function listingSheet(){
   const l = byId(sheetId);
   if(!l) return '';
-  const liked = S.liked.includes(l.id), dist = placeDistText(l.place);
+  const liked = S.liked.includes(l.id);
   const inDeck = marcheList()[marcheIdx]?.id === l.id;
   return sheetFrame('食材の詳細', plainTop(`${art(l.item)} ${h(l.item)}`), `
     ${previewCard(l)}
     <dl class="kv">
-      <dt>受け渡し</dt><dd>${h(fmtDate(l.date))} ${h(l.from)}〜${h(l.to)}・${h(l.place)}${dist ? `（${h(dist)}）` : ''}</dd>
+      <dt>受け渡し日</dt><dd>${h(fmtDate(l.date))} ${h(l.from)}〜${h(l.to)}</dd>
+      <dt>受け渡し方法</dt><dd>${HANDOFF}</dd>
       <dt>販売単位</dt><dd>最低${q(l.minQty,l.unit)}・${q(l.step,l.unit)}刻み</dd>
       <dt>更新</dt><dd class="cap" style="margin:0">${h(updText(l).replace(/^情報の更新：/, ''))}</dd>
     </dl>
@@ -1730,12 +1704,6 @@ function bindDeck(){
   card.addEventListener('pointerup', onUp);
   card.addEventListener('pointercancel', onUp);
 }
-function geoButtonHtml(){
-  if(geoStatus === 'ok') return `<p class="cap">📍 現在地から近い順に並べています（拠点までのおおよその距離です）</p>`;
-  if(geoStatus === 'denied') return `<p class="cap">現在地を使えなかったため、通常の順番で表示しています。</p>`;
-  if(geoStatus === 'unsupported') return '';
-  return `<button type="button" class="link" id="mk-geo">📍 現在地から近い順に並べる</button>`;
-}
 function likedSectionHtml(){
   const liked = S.liked.map(byId).filter(Boolean);
   return `<section class="sec" id="liked-sec">
@@ -1758,7 +1726,6 @@ function renderBrowse(){
         <select id="mk-item" aria-label="食材で絞り込む" class="${marcheItem ? 'on' : ''}">${opt(items, marcheItem, '食材：すべて')}</select>
         <select id="mk-region" aria-label="地域で絞り込む" class="${marcheRegion ? 'on' : ''}">${opt(Object.keys(REGION_GROUPS), marcheRegion, '地域：すべて')}</select>
       </div>
-      <div id="mk-geo-wrap">${geoButtonHtml()}</div>
       <div id="mk-out">${deckHtml()}</div>
     </section>`;
   const list = sorted.length ? [...new Set(sorted.map(l => l.item))].map(it => `<section class="sec"><h2 class="group-h"><span aria-hidden="true">${art(it)}</span>${h(it)}<span class="cap">${sorted.filter(l => l.item === it).length}件</span></h2>
@@ -1867,12 +1834,11 @@ function confirmView(){
       <div class="field${miss('deadline')}"><label for="c-date">希望日</label><input id="c-date" type="date" min="${iso(today0())}" value="${r.deadline ?? ''}"></div>
       <div class="field"><label for="c-mode">受け渡し</label><select id="c-mode"><option value="by"${r.dateMode==='by'?' selected':''}>希望日までに</option><option value="on"${r.dateMode==='on'?' selected':''}>希望日ちょうど</option></select></div>
     </div>
-    <details><summary>こだわり条件（地域・価格・規格外・場所）</summary>
+    <details><summary>こだわり条件（地域・価格・規格外）</summary>
       <div class="grid" style="margin-top:14px">
         <div class="field"><label for="c-region">地域</label><select id="c-region">${opt(Object.keys(REGION_GROUPS), r.region, '指定なし')}</select></div>
         <div class="field"><label for="c-price">単価の上限（税込・1${h(r.unit||'kg')}）</label><input id="c-price" type="number" inputmode="numeric" min="1" placeholder="指定なし" value="${r.maxPrice ?? ''}"></div>
         <div class="field"><label for="c-off">形の不揃いなど規格外</label><select id="c-off"><option value="0"${!r.allowOff?' selected':''}>含めない${r.allowOffStated?'':'（指定なし）'}</option><option value="1"${r.allowOff?' selected':''}>含めてよい</option></select></div>
-        <div class="field"><label for="c-place">受渡場所</label><select id="c-place">${opt(PLACES, r.place, '指定なし')}</select></div>
       </div>
     </details>
     <div id="c-err"></div>
@@ -1885,7 +1851,7 @@ function readConfirm(){
     item: $('#c-item').value || null, qty: +$('#c-qty').value || null, unit: $('#c-unit').value,
     deadline: $('#c-date').value || null, dateMode: $('#c-mode').value, region: $('#c-region').value,
     maxPrice: +$('#c-price').value || null, allowOff: $('#c-off').value === '1',
-    allowOffStated: S.draft.req.allowOffStated || $('#c-off').value === '1', place: $('#c-place').value
+    allowOffStated: S.draft.req.allowOffStated || $('#c-off').value === '1'
   };
   const err = [];
   if(!r.item) err.push('品目を選んでください');
@@ -1895,9 +1861,9 @@ function readConfirm(){
 }
 
 /* ---------- restaurant: plan ---------- */
-function slotLabel(key){ const [d,t,p] = key.split('|'); return {date:fmtDate(d), time:t.replace('-','〜'), place:p}; }
+function slotLabel(key){ const [d,t] = key.split('|'); return {date:fmtDate(d), time:(t || '').replace('-','〜')}; }
 function reqChips(r){
-  return [r.item, q(r.qty,r.unit), `${fmtDate(r.deadline)}${r.dateMode==='by'?'まで':''}`, r.region||'地域指定なし', r.allowOff?'規格外可':'規格外を含めない', r.maxPrice!=null?`${yen(r.maxPrice)}/${r.unit}まで`:null, r.place||null]
+  return [r.item, q(r.qty,r.unit), `${fmtDate(r.deadline)}${r.dateMode==='by'?'まで':''}`, r.region||'地域指定なし', r.allowOff?'規格外可':'規格外を含めない', r.maxPrice!=null?`${yen(r.maxPrice)}/${r.unit}まで`:null]
     .filter(Boolean).map(h).join('・');
 }
 // 候補ごとの「確認が必要な点」。登録データから言えることだけを書く
@@ -1946,7 +1912,7 @@ function resultView(){
     verdict = `🎉 条件を満たす${q(r.qty,u)}の仕入れ案が見つかりました`;
     body = `<dl class="sum">
         <div><dt>数量</dt><dd><span class="bigv">${+r.qty}<small>${h(u)}</small></span><span class="sub">希望どおり・${res.best.n}軒の組み合わせ</span></dd></div>
-        <div><dt>受け渡し</dt><dd><b>${h(s.date)}</b> ${h(s.time)}<span class="sub">${h(s.place)}</span></dd></div>
+        <div><dt>受け渡し</dt><dd><b>${h(s.date)}</b> ${h(s.time)}<span class="sub">方法は成立後に相手と相談</span></dd></div>
         <div><dt>費用</dt><dd><span class="bigv">${res.best.cost.toLocaleString('ja-JP')}<small>円</small></span><span class="sub">税込・受渡手数料0円（デモ条件）</span></dd></div>
       </dl>
       <div class="slip-sec">つながる生産者さん</div>
@@ -1956,14 +1922,14 @@ function resultView(){
     verdict = {
       none: `条件に合う${r.item}の出品がありません`,
       short: `希望${q(r.qty,u)}に対し、条件の合う登録数量は${q(res.partial?.total||0,u)}。${q(short,u)}不足`,
-      slot: '数量はありますが、同じ日時・場所で受け取れる組み合わせがありません',
+      slot: '数量はありますが、同じ日時で受け取れる組み合わせがありません',
       step: `最低販売量・販売刻みの都合で、ちょうど${q(r.qty,u)}にできません`
     }[res.status];
     if(res.partial){
       const s = slotLabel(res.partial.slot);
       body = `<dl class="sum">
           <div><dt>数量</dt><dd><span class="bigv">${+res.partial.total.toFixed(1)}<small>${h(u)}まで</small></span><span class="sub">希望${q(r.qty,u)}に${q(short,u)}足りません</span></dd></div>
-          <div><dt>受け渡し</dt><dd><b>${h(s.date)}</b> ${h(s.time)}<span class="sub">${h(s.place)}</span></dd></div>
+          <div><dt>受け渡し</dt><dd><b>${h(s.date)}</b> ${h(s.time)}<span class="sub">方法は成立後に相手と相談</span></dd></div>
           <div><dt>費用</dt><dd><b>${yen(res.partial.cost)}</b><span class="sub">${q(res.partial.total,u)}分の参考額</span></dd></div>
         </dl>
         <div class="slip-sec">参考：いま揃う最大量の内訳（成立していません）</div>
@@ -2075,17 +2041,17 @@ function renderRecords(){
         <div class="tags">${tag}<span class="tag">未確保</span></div>
         <div class="cap">${reqChips(s.req)}</div>
         ${s.picks.length ? `<ul class="lines">${s.picks.map(k=>`<li><span>👨‍🌾 ${h(k.farm)}</span><span>${q(k.amt,u)}・${yen(k.cost)}</span></li>`).join('')}</ul>` : ''}
-        ${s0 ? `<div class="cap">受け渡し：${h(s0.date)} ${h(s0.time)}・${h(s0.place)}</div>` : ''}
+        ${s0 ? `<div class="cap">受け渡し：${h(s0.date)} ${h(s0.time)}</div>` : ''}
         ${c.kind === 'changed' ? `<div class="msg warn">いまの在庫では：${h(c.summary)}</div>` : ''}
         <div class="row">${c.kind !== 'past' ? `<button type="button" class="btn small btn-sub" data-reopen="${i}">この条件で開き直す</button>` : ''}<button type="button" class="btn small" data-del="${i}">削除</button></div>
       </article>`; }).join('')}</div>`;
 }
 
 /* ---------- producer ---------- */
-const FD = () => ({farm:'', item:'トマト', variety:'', date:addDays(2), region:'能勢・豊能', qty:'', unit:'kg', price:'', place:PLACES[0], from:'10:00', to:'11:00', minQty:1, step:1, grade:'通常', reason:OFF_REASONS[0], surplus:false});
-const LISTING_KEYS = ['farm','item','variety','date','region','qty','unit','price','place','from','to','minQty','step','grade','reason','surplus'];
+const FD = () => ({farm:'', item:'トマト', variety:'', date:addDays(2), region:'能勢・豊能', qty:'', unit:'kg', price:'', from:'10:00', to:'11:00', minQty:1, step:1, grade:'通常', reason:OFF_REASONS[0], surplus:false});
+const LISTING_KEYS = ['farm','item','variety','date','region','qty','unit','price','from','to','minQty','step','grade','reason','surplus'];
 const WSTEPS = ['食材','数量','価格','受け渡し','確認'];
-const REQUIRED = ['farm','item','region','qty','unit','minQty','step','price','date','place','from','to'];
+const REQUIRED = ['farm','item','region','qty','unit','minQty','step','price','date','from','to'];
 const filled = (d,k) => { const v = d[k]; if(['qty','minQty','step','price'].includes(k)) return +v > 0; return String(v ?? '').trim() !== ''; };
 function farmCard(l){
   return `<article class="card lc${l.active?'':' off'}${flashId===l.id?' flash':''}" id="card-${l.id}" style="--t:${tint(l.item)}">
@@ -2094,7 +2060,7 @@ function farmCard(l){
       <div class="price"><b style="font-size:19px">¥${l.price.toLocaleString('ja-JP')}</b><span>/${h(l.unit)}</span></div></div>
     <div class="tags">${listingStatus(l)}${l.grade==='規格外'?`<span class="tag">規格外・${h(l.reason)}</span>`:''}${l.surplus?'<span class="tag">余剰</span>':''}${l.demo?'<span class="tag">サンプル</span>':''}</div>
     <dl class="kv">
-      <dt>受け渡し</dt><dd>${h(fmtDate(l.date))} ${h(l.from)}〜${h(l.to)}・${h(placeShort(l.place))}</dd>
+      <dt>受け渡し</dt><dd>${h(fmtDate(l.date))} ${h(l.from)}〜${h(l.to)}（方法は成立後に飲食店と相談）</dd>
       <dt>販売単位</dt><dd>最低${q(l.minQty,l.unit)}・${q(l.step,l.unit)}刻み</dd>
       <dt>更新</dt><dd class="cap" style="margin:0">${h(updText(l).replace(/^情報の更新：/, ''))}</dd>
     </dl>
@@ -2144,22 +2110,21 @@ function wizBody(step, d){
   if(step === 4) return `<h2 class="sec-title">🧺 いつ・どこで渡せますか？</h2>
     <div class="grid">
       <div class="field full"><label for="f-date">受け渡し日（販売可能日）</label><input id="f-date" data-f="date" type="date" min="${iso(today0())}" value="${h(d.date)}"></div>
-      <div class="field full"><label for="f-place">受け渡し場所</label><select id="f-place" data-f="place">${opt(PLACES,d.place)}</select></div>
       <div class="field"><label for="f-from">時間（から）</label><input id="f-from" data-f="from" type="time" value="${h(d.from)}"></div>
       <div class="field"><label for="f-to">時間（まで）</label><input id="f-to" data-f="to" type="time" value="${h(d.to)}"></div>
     </div>
-    <p class="cap">同じ日時・場所の農家さんどうしが、1つの仕入れ案にまとめられます。</p>`;
+    <p class="cap">同じ日時の農家さんどうしが、1つの仕入れ案にまとめられます。受け渡しの方法（場所など）は、マッチング成立後に電話・メールで飲食店と相談して決めます。</p>`;
   const u = d.unit, edit = n => `<button type="button" class="link" data-wstep="${n}">変更</button>`;
   return `<h2 class="sec-title">✅ この内容で出品しますか？</h2>
     <dl class="kv">
       <dt>食材</dt><dd>${art(d.item)} ${h(d.item)}${d.variety?'（'+h(d.variety)+'）':''}・${h(d.farm)}・${h(d.region)}${d.grade==='規格外'?`・規格外（${h(d.reason)}）`:''}${d.surplus?'・余剰':''} ${edit(1)}</dd>
       <dt>数量</dt><dd>${q(d.qty,u)}（最低${q(d.minQty,u)}・${q(d.step,u)}刻み） ${edit(2)}</dd>
       <dt>価格</dt><dd>${yen(+d.price)}/${h(u)}（税込） ${edit(3)}</dd>
-      <dt>受け渡し</dt><dd>${h(fmtDate(d.date))} ${h(d.from)}〜${h(d.to)}・${h(placeShort(d.place))} ${edit(4)}</dd>
+      <dt>受け渡し</dt><dd>${h(fmtDate(d.date))} ${h(d.from)}〜${h(d.to)} ${edit(4)}</dd>
     </dl>
     ${warnHtml(d)}
     <div class="sec-label">👀 飲食店からの見え方（プレビュー）</div>
-    <div class="preview-wrap">${previewCard({item:d.item, variety:d.variety, farm:d.farm || '（農家名）', region:d.region, price:+d.price || 0, unit:d.unit, qty:+d.qty || 0, minQty:+d.minQty || 1, step:+d.step || 1, date:d.date, place:d.place, from:d.from, to:d.to, grade:d.grade, reason:d.reason, surplus:d.surplus})}</div>
+    <div class="preview-wrap">${previewCard({item:d.item, variety:d.variety, farm:d.farm || '（農家名）', region:d.region, price:+d.price || 0, unit:d.unit, qty:+d.qty || 0, minQty:+d.minQty || 1, step:+d.step || 1, date:d.date, from:d.from, to:d.to, grade:d.grade, reason:d.reason, surplus:d.surplus})}</div>
     <p class="cap">出品した数量は、ほかの農家さんの供給と組み合わされて飲食店の仕入れ案に使われます。仕入れ案に使われただけでは数量は減りません。</p>`;
 }
 // 入力の確認（止めずに注意だけ出す）：同じ品目の出品と価格が大きく違う、数量が極端、など
@@ -2195,7 +2160,6 @@ function validateStep(n, d){
     if(!(Number.isInteger(num(d.price)) && num(d.price) >= 1 && num(d.price) <= 100000)) e.push('単価は1〜100,000円の整数で入力してください');
   } else if(n === 4){
     if(!isISO(d.date) || d.date < iso(today0())) e.push('受け渡し日を今日以降で選んでください');
-    if(!PLACES.includes(d.place)) e.push('受け渡し場所を選んでください');
     if(!d.from || !d.to || d.from >= d.to) e.push('時間の「から」を「まで」より前にしてください');
   }
   return e;
@@ -2205,7 +2169,7 @@ const progressText = left => left ? `<span>必須 ${REQUIRED.length - left}/${RE
 function newDraft(){
   const d = {...FD(), farm:me.farm || ''};
   const prev = [...S.listings].reverse().find(l => l.mine);
-  if(prev) for(const k of ['region','unit','place','from','to','minQty','step','item','variety','price']) d[k] = prev[k];
+  if(prev) for(const k of ['region','unit','from','to','minQty','step','item','variety','price']) d[k] = prev[k];
   return {step:1, d};
 }
 function renderWizard(){
@@ -2281,7 +2245,7 @@ function renderSettings(){
     <section class="card">
       <h2 class="sec-title">🧺 このアプリでできること</h2>
       <p class="muted">飲食店の仕入れの希望と、生産者が登録した在庫を照らし合わせて仕入れ案を作り、生産者に仕入れ依頼を送れます。生産者は依頼を受ける・断る・条件の変更を提案でき、双方が同じ条件に同意すると取引成立です。成立後は、準備・受け渡し・受け取り確認までの進み具合を双方で記録できます。</p>
-      <p class="cap">決済、配送、在庫の確保（予約）は行いません。受け渡しは、合意した日時・場所で当事者どうしが行います。取引が成立しても出品の数量は自動では減りません。</p>
+      <p class="cap">決済、配送、在庫の確保（予約）は行いません。受け渡しの方法は、マッチング成立後に電話・メールで相手と相談して決めます。取引が成立しても出品の数量は自動では減りません。</p>
     </section>
     <section class="card">
       <h2 class="sec-title">🔒 このアプリが保存する情報</h2>
@@ -2367,22 +2331,12 @@ document.addEventListener('click', ev => {
   if(id === 'sheet-skip'){ closeSheet(); return skipCurrent(false); }
   if(id === 'sheet-like'){ closeSheet(); return likeCurrent(false); }
   if(ds.unlike){ S.liked = S.liked.filter(x => x !== ds.unlike); save(); const lk = $('#liked-sec'); if(lk) lk.outerHTML = likedSectionHtml(); toast('いいねを外しました'); return; }
-  if(id === 'mk-geo'){
-    if(!navigator.geolocation){ geoStatus = 'unsupported'; const w = $('#mk-geo-wrap'); if(w) w.innerHTML = geoButtonHtml(); return; }
-    geoStatus = 'loading'; t.disabled = true; t.textContent = '現在地を取得しています…';
-    navigator.geolocation.getCurrentPosition(pos => {
-      myCoords = {lat:pos.coords.latitude, lng:pos.coords.longitude}; geoStatus = 'ok'; marcheIdx = 0;
-      const o = $('#mk-out'); if(o){ o.innerHTML = deckHtml(); bindDeck(); }
-      const w = $('#mk-geo-wrap'); if(w) w.innerHTML = geoButtonHtml();
-    }, () => { geoStatus = 'denied'; const w = $('#mk-geo-wrap'); if(w) w.innerHTML = geoButtonHtml(); }, {timeout:8000});
-    return;
-  }
-  // 出品の内容（品目・数量・受け渡し日・地域・場所・規格外）を入れた状態で、仕入れ案の条件確認へ
+  // 出品の内容（品目・数量・受け渡し日・地域・規格外）を入れた状態で、仕入れ案の条件確認へ
   if(ds.browseBuild){
     const l = byId(ds.browseBuild); if(!l) return;
     const region = Object.keys(REGION_GROUPS).find(k => (REGION_GROUPS[k] || []).includes(l.region)) || '';
     S.draft.text = `${l.farm}の${l.item}を${q(l.qty,l.unit)}`;
-    S.draft.req = clean({item:l.item, qty:l.qty, unit:l.unit, deadline:l.date, dateMode:'by', region, place:l.place, allowOff:l.grade === '規格外'});
+    S.draft.req = clean({item:l.item, qty:l.qty, unit:l.unit, deadline:l.date, dateMode:'by', region, allowOff:l.grade === '規格外'});
     S.draft.note = `${h(l.farm)}の${h(l.item)}をもとに条件を入れました。必要なところを直してください。`; S.draft.noteKind = 'ok';
     S.step = 'confirm'; return go('shop');
   }
@@ -2571,7 +2525,7 @@ document.addEventListener('submit', ev => {
   if(f.dataset.counterForm){
     ev.preventDefault();
     const id = f.dataset.counterForm, v = k => (document.getElementById(`k-${k}-${id}`) || {}).value || '';
-    return dealAct(id, 'counter', {terms:{qty:+v('qty'), price:+v('price'), date:v('date'), from:v('from'), to:v('to'), place:v('place')}, note:v('note').trim()});
+    return dealAct(id, 'counter', {terms:{qty:+v('qty'), price:+v('price'), date:v('date'), from:v('from'), to:v('to')}, note:v('note').trim()});
   }
 });
 

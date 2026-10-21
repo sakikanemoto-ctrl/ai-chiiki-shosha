@@ -8,7 +8,6 @@ import { seedListings, validateListing } from '../lib/domain.js';
 import { KEY, load } from '../lib/inventory.js';
 import { aiReady } from '../lib/ai.js';
 import { currentUser } from '../lib/auth.js';
-import { publicPlaces } from '../lib/places.js';
 
 const MAX_LISTINGS = 300;
 const PASSCODE = process.env.EDIT_PASSCODE || '';
@@ -18,10 +17,11 @@ function send(res, status, body) {
   res.setHeader('Cache-Control', 'no-store');
   res.status(status).json(body);
 }
-// 自分の出品か・編集できるかを付けて返す。持ち主のユーザーIDは返さない
+// 自分の出品か・編集できるかを付けて返す。持ち主のユーザーIDは返さない。
+// 受け渡し場所は扱わない（以前の出品に残っている place は返さない。古い版に戻せるよう、保存データからは消さない）
 // 編集できるもの：自分の出品、デモの出品（だれでも試せる）
 const canEdit = (l, u) => Boolean(u && u.role === 'producer' && (l.demo || l.ownerId === u.id));
-const payload = (st, u) => ({ listings: st.listings.map(({ ownerId, ...l }) => ({ ...l, mine: Boolean(u && ownerId === u.id), editable: canEdit({ ...l, ownerId }, u) })) });
+const payload = (st, u) => ({ listings: st.listings.map(({ ownerId, place, ...l }) => ({ ...l, mine: Boolean(u && ownerId === u.id), editable: canEdit({ ...l, ownerId }, u) })) });
 // デモ用の架空の農家名を、利用者の登録に使わせない（実データとデモデータが混ざらないように）
 const demoFarmName = (st, name) => st.listings.some(l => l.demo && l.farm === name);
 
@@ -29,7 +29,7 @@ export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const st = await load(), user = await currentUser(req);
-      return send(res, 200, { ...payload(st, user), editLocked: Boolean(PASSCODE), shared: hasRedis, aiReady: aiReady(), places: publicPlaces() });
+      return send(res, 200, { ...payload(st, user), editLocked: Boolean(PASSCODE), shared: hasRedis, aiReady: aiReady() });
     }
     if (req.method !== 'POST') return send(res, 405, { error: '使えない操作です' });
 
@@ -53,8 +53,8 @@ export default async function handler(req, res) {
         const { errors, listing } = validateListing({ ...(body.listing || {}), farm: user.farm });
         if (errors.length) return send(res, 400, { error: errors[0], errors });
         if (demoFarmName(st, listing.farm)) return send(res, 409, { error: `「${listing.farm}」はデモ用の架空の農家名です。あなたの農家名で登録してください` });
-        const dup = st.listings.find(x => x.active && x.farm === listing.farm && x.item === listing.item && x.variety === listing.variety && x.date === listing.date && x.place === listing.place && x.unit === listing.unit);
-        if (dup) return send(res, 409, { error: `同じ日・同じ場所の「${listing.item}」がすでに出品されています。数量を変えるときは、出品カードの「数量を変更」を使ってください`, id: dup.id });
+        const dup = st.listings.find(x => x.active && x.farm === listing.farm && x.item === listing.item && x.variety === listing.variety && x.date === listing.date && x.unit === listing.unit);
+        if (dup) return send(res, 409, { error: `同じ日の「${listing.item}」がすでに出品されています。数量を変えるときは、出品カードの「数量を変更」を使ってください`, id: dup.id });
         const l = { ...listing, id: 'l' + (++st.seq), active: true, v: 1, demo: false, ownerId: user.id, at: Date.now(), updatedAt: Date.now() };
         st.listings.push(l);
         await setJSON(KEY, st);
@@ -66,8 +66,8 @@ export default async function handler(req, res) {
         // 農家名は変えられない（自分の出品は自分の農家名、デモの出品はデモの農家名のまま）
         const { errors, listing } = validateListing({ ...(body.listing || {}), farm: l.farm });
         if (errors.length) return send(res, 400, { error: errors[0], errors });
-        const dup = st.listings.find(x => x.id !== l.id && x.active && x.farm === listing.farm && x.item === listing.item && x.variety === listing.variety && x.date === listing.date && x.place === listing.place && x.unit === listing.unit);
-        if (dup) return send(res, 409, { error: `同じ日・同じ場所の「${listing.item}」がほかに出品されています。日付か受け渡し場所を変えてください`, id: dup.id });
+        const dup = st.listings.find(x => x.id !== l.id && x.active && x.farm === listing.farm && x.item === listing.item && x.variety === listing.variety && x.date === listing.date && x.unit === listing.unit);
+        if (dup) return send(res, 409, { error: `同じ日の「${listing.item}」がほかに出品されています。日付を変えてください`, id: dup.id });
         Object.assign(l, listing, { v: l.v + 1, editedAt: Date.now(), updatedAt: Date.now() });
         await setJSON(KEY, st);
         return send(res, 200, { ...payload(st, user), id: l.id });
